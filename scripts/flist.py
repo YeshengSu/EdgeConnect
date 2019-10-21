@@ -18,6 +18,11 @@ flist_dataset_paths = [
 for flist_path, dataset_path in flist_dataset_paths:
     print('creating', flist_path)
     images = []
+
+    # auto create directory
+    os.makedirs(os.path.dirname(flist_path), exist_ok=True)
+
+    # find all image
     for root, dirs, files in os.walk(dataset_path):
         print('loading : ' + root)
         for file in files:
