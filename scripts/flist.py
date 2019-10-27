@@ -13,6 +13,9 @@ flist_dataset_paths = [
     (r"../datasets/places2_train.flist", r"F:\edge_connect\temp_test\img_align_celeba"),
     (r"../datasets/places2_val.flist",   r"F:\edge_connect\temp_test\img_align_celeba"),
     (r"../datasets/places2_test.flist",  r"F:\edge_connect\temp_test\img_align_celeba"),
+    (r"../datasets/masks_train.flist", r"F:\edge_connect\temp_test\irregular_mask"),
+    (r"../datasets/masks_val.flist", r"F:\edge_connect\temp_test\irregular_mask"),
+    (r"../datasets/masks_test.flist", r"F:\edge_connect\temp_test\irregular_mask"),
 ]
 
 for flist_path, dataset_path in flist_dataset_paths:

@@ -8,6 +8,7 @@ We develop a new approach for image inpainting that does a better job of reprodu
 (a) Input images with missing regions. The missing regions are depicted in white. (b) Computed edge masks. Edges drawn in black are computed (for the available regions) using Canny edge detector; whereas edges shown in blue are hallucinated by the edge generator network. (c) Image inpainting results of the proposed approach.
 
 ## Prerequisites
+- tensorflow
 - Python 3
 - PyTorch 1.0
 - NVIDIA GPU + CUDA cuDNN

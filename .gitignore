@@ -106,3 +106,5 @@ ENV/
 results
 datasets
 \.idea/
+
+checkpoints/celeba/
