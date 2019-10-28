@@ -1,15 +1,16 @@
-import os
 import glob
-import scipy
-import torch
+import os
 import random
+
 import numpy as np
+import torch
 import torchvision.transforms.functional as F
-from torch.utils.data import DataLoader
 from PIL import Image
 from imageio import imread
-from skimage.feature import canny
 from skimage.color import rgb2gray, gray2rgb
+from skimage.feature import canny
+from torch.utils.data import DataLoader
+
 from .utils import create_mask
 
 
@@ -165,8 +166,7 @@ class Dataset(torch.utils.data.Dataset):
             i = (imgw - side) // 2
             img = img[j:j + side, i:i + side, ...]
 
-        img = scipy.misc.imresize(img, [height, width])
-
+        img = np.array(Image.fromarray(img).resize((height, width)))
         return img
 
     def load_flist(self, flist):
