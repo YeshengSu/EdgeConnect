@@ -108,3 +108,7 @@ datasets
 \.idea/
 
 checkpoints/celeba/
+
+*.pth
+
+*.dat
