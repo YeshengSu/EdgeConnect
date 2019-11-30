@@ -112,3 +112,9 @@ checkpoints/celeba/
 *.pth
 
 *.dat
+
+checkpoints/samples/edge/
+
+checkpoints/config.yml
+
+scripts/flist.py

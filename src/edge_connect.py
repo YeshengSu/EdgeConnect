@@ -194,6 +194,8 @@ class EdgeConnect():
                 # log model at checkpoints
                 if self.config.LOG_INTERVAL and iteration % self.config.LOG_INTERVAL == 0:
                     self.log(logs)
+                    print('\nepoch:{}, iter:{}/{}, progress: {} %'.format(
+                            epoch, iteration, max_iteration, round(iteration * 100 / max_iteration, 2)))
 
                 # sample model at checkpoints
                 if self.config.SAMPLE_INTERVAL and iteration % self.config.SAMPLE_INTERVAL == 0:
