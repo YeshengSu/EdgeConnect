@@ -118,3 +118,5 @@ checkpoints/samples/edge/
 checkpoints/config.yml
 
 scripts/flist.py
+
+checkpoints/samples/inpaint/
