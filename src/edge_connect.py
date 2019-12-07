@@ -2,6 +2,8 @@ import os
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
+
+import utils
 from .dataset import Dataset
 from .models import EdgeModel, InpaintingModel
 from .utils import Progbar, create_dir, stitch_images, imsave
@@ -99,7 +101,7 @@ class EdgeConnect():
                 self.edge_model.train()
                 self.inpaint_model.train()
 
-                images, images_gray, edges, masks = self.cuda(*items)
+                ori_imges, images, images_gray, edges, masks = self.cuda(*items)
 
                 # edge model
                 if model == 1:
@@ -231,7 +233,7 @@ class EdgeConnect():
 
         for items in val_loader:
             iteration += 1
-            images, images_gray, edges, masks = self.cuda(*items)
+            ori_imges, images, images_gray, edges, masks = self.cuda(*items)
 
             # edge model
             if model == 1:
@@ -310,7 +312,7 @@ class EdgeConnect():
         index = 0
         for items in test_loader:
             name = self.test_dataset.load_name(index)
-            images, images_gray, edges, masks = self.cuda(*items)
+            ori_imges, images, images_gray, edges, masks = self.cuda(*items)
             index += 1
 
             # edge model
@@ -333,7 +335,7 @@ class EdgeConnect():
             path = os.path.join(self.results_path, name)
             print(index, name)
 
-            imsave(output, path)
+            imsave(output, path, ori_imges.data.shape)
 
             if self.debug:
                 edges = self.postprocess(1 - edges)[0]

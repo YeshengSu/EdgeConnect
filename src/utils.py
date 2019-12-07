@@ -39,6 +39,18 @@ def stitch_images(inputs, *outputs, img_per_row=2):
 
     return img
 
+def resize(img, height, width, centerCrop=True):
+    imgh, imgw = img.shape[0:2]
+
+    if centerCrop and imgh != imgw:
+        # center crop
+        side = np.minimum(imgh, imgw)
+        j = (imgh - side) // 2
+        i = (imgw - side) // 2
+        img = img[j:j + side, i:i + side, ...]
+
+    img = np.array(Image.fromarray(img).resize((height, width), Image.BOX))
+    return img
 
 def imshow(img, title=''):
     fig = plt.gcf()
@@ -48,8 +60,11 @@ def imshow(img, title=''):
     plt.show()
 
 
-def imsave(img, path):
-    im = Image.fromarray(img.cpu().numpy().astype(np.uint8).squeeze())
+def imsave(img, path, ori_shape=None):
+    image = img.cpu().numpy().astype(np.uint8)
+    if ori_shape:
+        image = resize(image, ori_shape[3], ori_shape[2])
+    im = Image.fromarray(image.squeeze())
     im.save(path)
 
 

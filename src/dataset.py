@@ -1,4 +1,5 @@
 import glob
+import math
 import os
 import random
 
@@ -11,6 +12,7 @@ from skimage.color import rgb2gray, gray2rgb
 from skimage.feature import canny
 from torch.utils.data import DataLoader
 
+import utils
 from .utils import create_mask
 
 
@@ -55,21 +57,30 @@ class Dataset(torch.utils.data.Dataset):
         size = self.input_size
 
         # load image
-        img = imread(self.data[index])
+        ori_img = imread(self.data[index])
 
         # gray to rgb
-        if len(img.shape) < 3:
-            img = gray2rgb(img)
+        if len(ori_img.shape) < 3:
+            ori_img = gray2rgb(ori_img)
 
         # resize/crop if needed
         if size != 0:
-            img = self.resize(img, size, size)
+            img = utils.resize(ori_img, size, size)
+        else:
+            max_size = max(ori_img.shape[0], ori_img.shape[1])
+            max_size = 2 ** math.ceil(math.log2(max_size))
+            img = utils.resize(ori_img, max_size, max_size)
 
         # create grayscale image
         img_gray = rgb2gray(img)
 
         # load mask
         mask = self.load_mask(img, index)
+
+        # resize/crop if needed
+        if size == 0:
+            img_shape = img.shape
+            mask = utils.resize(mask, img_shape[1], img_shape[0])
 
         # load edge
         edge = self.load_edge(img_gray, index, mask)
@@ -81,7 +92,7 @@ class Dataset(torch.utils.data.Dataset):
             edge = edge[:, ::-1, ...]
             mask = mask[:, ::-1, ...]
 
-        return self.to_tensor(img), self.to_tensor(img_gray), self.to_tensor(edge), self.to_tensor(mask)
+        return self.to_tensor(ori_img), self.to_tensor(img), self.to_tensor(img_gray), self.to_tensor(edge), self.to_tensor(mask)
 
     def load_edge(self, img, index, mask):
         sigma = self.sigma
@@ -106,7 +117,7 @@ class Dataset(torch.utils.data.Dataset):
         else:
             imgh, imgw = img.shape[0:2]
             edge = imread(self.edge_data[index])
-            edge = self.resize(edge, imgh, imgw)
+            edge = utils.resize(edge, imgh, imgw)
 
             # non-max suppression
             if self.nms == 1:
@@ -139,14 +150,14 @@ class Dataset(torch.utils.data.Dataset):
         if mask_type == 3:
             mask_index = random.randint(0, len(self.mask_data) - 1)
             mask = imread(self.mask_data[mask_index])
-            mask = self.resize(mask, imgh, imgw)
+            mask = utils.resize(mask, imgh, imgw)
             mask = (mask > 0).astype(np.uint8) * 255       # threshold due to interpolation
             return mask
 
         # test mode: load mask non random
         if mask_type == 6:
             mask = imread(self.mask_data[index])
-            mask = self.resize(mask, imgh, imgw, centerCrop=False)
+            mask = utils.resize(mask, imgh, imgw, centerCrop=False)
             mask = rgb2gray(mask)
             mask = (mask > 0).astype(np.uint8) * 255
             return mask
@@ -155,19 +166,6 @@ class Dataset(torch.utils.data.Dataset):
         img = Image.fromarray(img)
         img_t = F.to_tensor(img).float()
         return img_t
-
-    def resize(self, img, height, width, centerCrop=True):
-        imgh, imgw = img.shape[0:2]
-
-        if centerCrop and imgh != imgw:
-            # center crop
-            side = np.minimum(imgh, imgw)
-            j = (imgh - side) // 2
-            i = (imgw - side) // 2
-            img = img[j:j + side, i:i + side, ...]
-
-        img = np.array(Image.fromarray(img).resize((height, width)))
-        return img
 
     def load_flist(self, flist):
         if isinstance(flist, list):
