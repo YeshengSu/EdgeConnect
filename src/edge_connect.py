@@ -101,7 +101,7 @@ class EdgeConnect():
                 self.edge_model.train()
                 self.inpaint_model.train()
 
-                ori_imges, images, images_gray, edges, masks = self.cuda(*items)
+                ori_shapes, images, images_gray, edges, masks = self.cuda(*items)
 
                 # edge model
                 if model == 1:
@@ -233,7 +233,7 @@ class EdgeConnect():
 
         for items in val_loader:
             iteration += 1
-            ori_imges, images, images_gray, edges, masks = self.cuda(*items)
+            ori_shapes, images, images_gray, edges, masks = self.cuda(*items)
 
             # edge model
             if model == 1:
@@ -312,7 +312,7 @@ class EdgeConnect():
         index = 0
         for items in test_loader:
             name = self.test_dataset.load_name(index)
-            ori_imges, images, images_gray, edges, masks = self.cuda(*items)
+            ori_shapes, images, images_gray, edges, masks = self.cuda(*items)
             index += 1
 
             # edge model
@@ -335,7 +335,8 @@ class EdgeConnect():
             path = os.path.join(self.results_path, name)
             print(index, name)
 
-            imsave(output, path, ori_imges.data.shape)
+            ori_shapes = [t.item() for t in ori_shapes]
+            imsave(output, path, ori_shapes[0:2])
 
             if self.debug:
                 edges = self.postprocess(1 - edges)[0]
@@ -410,7 +411,7 @@ class EdgeConnect():
             f.write('%s\n' % ' '.join([str(item[1]) for item in logs]))
 
     def cuda(self, *args):
-        return (item.to(self.config.DEVICE) for item in args)
+        return (item.to(self.config.DEVICE) if hasattr(item, 'to') else item for item in args)
 
     def postprocess(self, img):
         # [0, 1] => [0, 255]

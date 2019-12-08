@@ -60,10 +60,10 @@ def imshow(img, title=''):
     plt.show()
 
 
-def imsave(img, path, ori_shape=None):
+def imsave(img, path, height_width=None):
     image = img.cpu().numpy().astype(np.uint8)
-    if ori_shape:
-        image = resize(image, ori_shape[3], ori_shape[2])
+    if height_width:
+        image = resize(image, height_width[1], height_width[0])
     im = Image.fromarray(image.squeeze())
     im.save(path)
 

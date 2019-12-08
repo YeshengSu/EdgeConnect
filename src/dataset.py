@@ -92,7 +92,7 @@ class Dataset(torch.utils.data.Dataset):
             edge = edge[:, ::-1, ...]
             mask = mask[:, ::-1, ...]
 
-        return self.to_tensor(ori_img), self.to_tensor(img), self.to_tensor(img_gray), self.to_tensor(edge), self.to_tensor(mask)
+        return list(ori_img.shape), self.to_tensor(img), self.to_tensor(img_gray), self.to_tensor(edge), self.to_tensor(mask)
 
     def load_edge(self, img, index, mask):
         sigma = self.sigma
