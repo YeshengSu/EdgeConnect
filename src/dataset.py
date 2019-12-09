@@ -156,7 +156,7 @@ class Dataset(torch.utils.data.Dataset):
 
         # test mode: load mask non random
         if mask_type == 6:
-            mask = imread(self.mask_data[index])
+            mask = imread(self.mask_data[index%len(self.mask_data)])
             mask = utils.resize(mask, imgh, imgw, centerCrop=False)
             mask = rgb2gray(mask)
             mask = (mask > 0).astype(np.uint8) * 255
