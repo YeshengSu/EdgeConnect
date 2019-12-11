@@ -335,8 +335,11 @@ class EdgeConnect():
             path = os.path.join(self.results_path, name)
             print(index, name)
 
-            ori_shapes = [t.item() for t in ori_shapes]
-            imsave(output, path, ori_shapes[0:2])
+            if model != 1:
+                ori_shapes = [t.item() for t in ori_shapes]
+                imsave(output, path, ori_shapes[0:2])
+            else:
+                imsave(output, path)
 
             if self.debug:
                 edges = self.postprocess(1 - edges)[0]
