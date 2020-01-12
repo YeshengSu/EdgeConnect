@@ -49,7 +49,7 @@ def resize(img, height, width, centerCrop=True):
         i = (imgw - side) // 2
         img = img[j:j + side, i:i + side, ...]
 
-    img = np.array(Image.fromarray(img).resize((height, width), Image.BOX))
+    img = np.array(Image.fromarray(img).resize((width, height), Image.BOX))
     return img
 
 def imshow(img, title=''):
@@ -63,7 +63,7 @@ def imshow(img, title=''):
 def imsave(img, path, height_width=None):
     image = img.cpu().numpy().astype(np.uint8)
     if height_width:
-        image = resize(image, height_width[1], height_width[0])
+        image = resize(image, height_width[0], height_width[1])
     im = Image.fromarray(image.squeeze())
     im.save(path)
 

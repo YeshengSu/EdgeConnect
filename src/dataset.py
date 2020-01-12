@@ -80,7 +80,7 @@ class Dataset(torch.utils.data.Dataset):
         # resize/crop if needed
         if size == 0:
             img_shape = img.shape
-            mask = utils.resize(mask, img_shape[1], img_shape[0])
+            mask = utils.resize(mask, img_shape[0], img_shape[1])
 
         # load edge
         edge = self.load_edge(img_gray, index, mask)
