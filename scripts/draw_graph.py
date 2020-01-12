@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-dege_log_data = {'path': r'./checkpoints/log_edge.dat', 'data': 5, 'name': 'precision', 'range': (0.0, 1.0)}
+dege_log_data = {'path': r'../checkpoints/log_edge.dat', 'data': 5, 'name': 'precision', 'range': (0.0, 1.0)}
 
 
 def preprocess(coord_x_list, coord_y_list, multiple):
