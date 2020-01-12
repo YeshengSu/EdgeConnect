@@ -10,12 +10,12 @@ args = parser.parse_args()
 ext = {'.JPG', '.JPEG', '.PNG', '.TIF', 'TIFF'}
 
 flist_dataset_paths = [
-    (r"../datasets/places2_train.flist", r"F:\edge_connect\temp_test\img_align_celeba"),
-    (r"../datasets/places2_val.flist",   r"F:\edge_connect\temp_test\img_align_celeba"),
-    (r"../datasets/places2_test.flist",  r"F:\edge_connect\temp_test\img_align_celeba"),
-    (r"../datasets/masks_train.flist", r"F:\edge_connect\temp_test\irregular_mask"),
-    (r"../datasets/masks_val.flist", r"F:\edge_connect\temp_test\irregular_mask"),
-    (r"../datasets/masks_test.flist", r"F:\edge_connect\temp_test\irregular_mask"),
+    (r"../datasets/places2_train.flist", r"E:\DeepLearnSample\EdgeConnect\CelebA\train"),
+    (r"../datasets/places2_val.flist",   r"E:\DeepLearnSample\EdgeConnect\CelebA\eval"),
+    (r"../datasets/places2_test.flist",  r"E:\DeepLearnSample\EdgeConnect\CelebA\test"),
+    (r"../datasets/masks_train.flist", r"E:\DeepLearnSample\EdgeConnect\mask\CustomMask3\train"),
+    (r"../datasets/masks_val.flist",   r"E:\DeepLearnSample\EdgeConnect\mask\CustomMask3\eval"),
+    (r"../datasets/masks_test.flist",  r"E:\DeepLearnSample\EdgeConnect\mask\CustomMask2\test"),
 ]
 
 for flist_path, dataset_path in flist_dataset_paths:

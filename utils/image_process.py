@@ -52,7 +52,7 @@ def image_process(imgPath, savePath):
         new_img = image_invert_color(new_img)
         new_img = new_img.convert('1')  # 改变格式 只存在黑白
 
-        image_path = image_save(new_img, savePath, file, 'png')
+        image_path = image_save(new_img, savePath, file)
 
         print(index+1, '/', img_num, '  process image : ', imgPath + '/' + file, '  save image : ', image_path)
 

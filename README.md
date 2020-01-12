@@ -29,7 +29,7 @@ pip install -r requirements.txt
 ### 1) Images
 We use [Places2](http://places2.csail.mit.edu), [CelebA](http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html) and [Paris Street-View](https://github.com/pathak22/context-encoder) datasets. To train a model on the full dataset, download datasets from official websites. 
 
-After downloading, run [`scripts/flist.py`](scripts/flist.py) to generate train, test and validation set file lists. For example, to generate the training set file list on Places2 dataset run:
+After downloading, run [`scripts/flist.py`](utils/flist.py) to generate train, test and validation set file lists. For example, to generate the training set file list on Places2 dataset run:
 ```bash
 mkdir datasets
 python ./scripts/flist.py --path path_to_places2_train_set --output ./datasets/places_train.flist
@@ -40,7 +40,7 @@ Our model is trained on the irregular mask dataset provided by [Liu et al.](http
 
 Alternatively, you can download [Quick Draw Irregular Mask Dataset](https://github.com/karfly/qd-imd) by Karim Iskakov which is combination of 50 million strokes drawn by human hand.
 
-Please use [`scripts/flist.py`](scripts/flist.py) to generate train, test and validation set masks file lists as explained above.
+Please use [`scripts/flist.py`](utils/flist.py) to generate train, test and validation set masks file lists as explained above.
 
 ## Getting Started
 Download the pre-trained models using the following links and copy them under `./checkpoints` directory.
@@ -104,7 +104,7 @@ python ./scripts/fid_score.py --path [path to validation, path to model output] 
 ```
 
 ### Alternative Edge Detection
-By default, we use Canny edge detector to extract edge information from the input images. If you want to train the model with an external edge detection ([Holistically-Nested Edge Detection](https://github.com/s9xie/hed) for example), you need to generate edge maps for the entire training/test sets as a pre-processing and their corresponding file lists using [`scripts/flist.py`](scripts/flist.py) as explained above. Please make sure the file names and directory structure match your training/test sets. You can switch to external edge detection by specifying `EDGE=2` in the config file.
+By default, we use Canny edge detector to extract edge information from the input images. If you want to train the model with an external edge detection ([Holistically-Nested Edge Detection](https://github.com/s9xie/hed) for example), you need to generate edge maps for the entire training/test sets as a pre-processing and their corresponding file lists using [`scripts/flist.py`](utils/flist.py) as explained above. Please make sure the file names and directory structure match your training/test sets. You can switch to external edge detection by specifying `EDGE=2` in the config file.
 
 ### Model Configuration
 

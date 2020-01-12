@@ -117,7 +117,7 @@ checkpoints/samples/edge/
 
 checkpoints/config.yml
 
-scripts/flist.py
+utils/flist.py
 
 checkpoints/samples/inpaint/
 
