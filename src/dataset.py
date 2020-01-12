@@ -19,6 +19,7 @@ from .utils import create_mask
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, config, flist, edge_flist, mask_flist, augment=True, training=True):
         super(Dataset, self).__init__()
+        self.mode = config.MODE
         self.augment = augment
         self.training = training
         self.data = self.load_flist(flist)
@@ -35,6 +36,9 @@ class Dataset(torch.utils.data.Dataset):
         # masks are loaded non random
         if config.MODE == 2:
             self.mask = 6
+
+        # preventing inaccurate ratio of img in train and losing details in test
+        self.is_center_crop = True if self.mode == 1 else False
 
     def __len__(self):
         return len(self.data)
@@ -53,7 +57,6 @@ class Dataset(torch.utils.data.Dataset):
         return os.path.basename(name)
 
     def load_item(self, index):
-
         size = self.input_size
 
         # load image
@@ -65,11 +68,11 @@ class Dataset(torch.utils.data.Dataset):
 
         # resize/crop if needed
         if size != 0:
-            img = utils.resize(ori_img, size, size)
+            img = utils.resize(ori_img, size, size, self.is_center_crop)
         else:
             max_size = max(ori_img.shape[0], ori_img.shape[1])
             max_size = 2 ** math.ceil(math.log2(max_size))
-            img = utils.resize(ori_img, max_size, max_size)
+            img = utils.resize(ori_img, max_size, max_size, self.is_center_crop)
 
         # create grayscale image
         img_gray = rgb2gray(img)
@@ -80,7 +83,7 @@ class Dataset(torch.utils.data.Dataset):
         # resize/crop if needed
         if size == 0:
             img_shape = img.shape
-            mask = utils.resize(mask, img_shape[0], img_shape[1])
+            mask = utils.resize(mask, img_shape[0], img_shape[1], self.is_center_crop)
 
         # load edge
         edge = self.load_edge(img_gray, index, mask)
@@ -117,7 +120,7 @@ class Dataset(torch.utils.data.Dataset):
         else:
             imgh, imgw = img.shape[0:2]
             edge = imread(self.edge_data[index])
-            edge = utils.resize(edge, imgh, imgw)
+            edge = utils.resize(edge, imgh, imgw, self.is_center_crop)
 
             # non-max suppression
             if self.nms == 1:
@@ -150,7 +153,7 @@ class Dataset(torch.utils.data.Dataset):
         if mask_type == 3:
             mask_index = random.randint(0, len(self.mask_data) - 1)
             mask = imread(self.mask_data[mask_index])
-            mask = utils.resize(mask, imgh, imgw)
+            mask = utils.resize(mask, imgh, imgw, self.is_center_crop)
             mask = (mask > 0).astype(np.uint8) * 255       # threshold due to interpolation
             return mask
 

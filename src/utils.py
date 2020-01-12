@@ -63,7 +63,7 @@ def imshow(img, title=''):
 def imsave(img, path, height_width=None):
     image = img.cpu().numpy().astype(np.uint8)
     if height_width:
-        image = resize(image, height_width[0], height_width[1])
+        image = resize(image, height_width[0], height_width[1], False)
     im = Image.fromarray(image.squeeze())
     im.save(path)
 
