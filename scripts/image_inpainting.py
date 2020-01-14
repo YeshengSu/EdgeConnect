@@ -69,9 +69,9 @@ class FileExplorer(QWidget):
             new_img = new_img.convert('RGB')
             self.image_data = np.asarray(new_img)
             preview_height = int(self.preview_width * self.image_data.shape[0] / self.image_data.shape[1])
-            new_img = np.array(Image.fromarray(self.image_data).resize((self.preview_width, preview_height), Image.BOX))
-            height, width, bytesPerComponent = new_img.shape
-            QImg = QImage(new_img, width, height, width*3, QImage.Format_RGB888)
+            resized_img_data = np.array(Image.fromarray(self.image_data).resize((self.preview_width, preview_height), Image.HAMMING))
+            height, width, bytesPerComponent = resized_img_data.shape
+            QImg = QImage(resized_img_data, width, height, width*3, QImage.Format_RGB888)
             pixmap = QPixmap.fromImage(QImg)
             self.image_preview.setPixmap(pixmap)
             # todo: emit select image
