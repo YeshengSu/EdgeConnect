@@ -80,6 +80,10 @@ class FileExplorer(QWidget):
     def on_clicked_add_folder(self):
         self.new_folder_path = QFileDialog.getExistingDirectory(self, "Add Folder", self.new_folder_path)
         if self.new_folder_path:
+            if self.new_folder_path in self.all_folders:
+                QMessageBox.warning(self, 'warning', 'New folder has exist !')
+                return
+
             print('add new folder path : ', self.new_folder_path)
 
             # add folder item
@@ -114,8 +118,9 @@ class FileExplorer(QWidget):
                     del self.all_folders[self.click_item.text(0)]
                     self.preview.removeChild(self.click_item)
                     self.click_item = None
+                    self.select_image = None
             else:
-                QMessageBox.warning(self, 'warning', 'only allow to remove folder')
+                QMessageBox.warning(self, 'warning', 'only allow to remove folder !')
 
 
 class SelectArea(QWidget):
