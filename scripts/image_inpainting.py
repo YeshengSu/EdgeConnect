@@ -1,5 +1,6 @@
 import sys
 
+from PyQt5.QtGui import QPalette, QColor
 from PyQt5.QtWidgets import QTabWidget, QApplication
 
 from image_inpainting_utils.draw_mask import DrawMask
@@ -9,20 +10,18 @@ from image_inpainting_utils.clip_area import ClipArea
 
 
 class MainWindow(QTabWidget):
-    # my_signal = pyqtSignal()
-
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent=parent)
 
         self.file_explorer = FileExplorer(self)
-        self.select_area = ClipArea(self)
+        self.clip_area = ClipArea(self)
         self.draw_mask = DrawMask(self)
         self.image_inpainting = ImageInpainting(self)
 
         self.setWindowTitle('Edge Connect')
         self.resize(1000, 800)
         self.addTab(self.file_explorer, 'File Explorer')
-        self.addTab(self.select_area, 'Select Area')
+        self.addTab(self.clip_area, 'Select Area')
         self.addTab(self.draw_mask, 'Draw Mask')
         self.addTab(self.image_inpainting, 'Image Inpainting')
 

@@ -3,8 +3,8 @@ from collections import defaultdict
 
 import numpy as np
 from PIL import Image
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtCore import Qt, QRect
+from PyQt5.QtGui import QImage, QPixmap, QFont
 from PyQt5.QtWidgets import QWidget, QPushButton, QTreeWidget, QTreeWidgetItem, QLabel, QHBoxLayout, QGridLayout, \
     QFileDialog, QMessageBox
 
@@ -37,8 +37,12 @@ class FileExplorer(QWidget):
         self.preview = QTreeWidgetItem(self.tree)
         self.preview.setText(0, 'ALL Folders')
 
+        ft1 = QFont()
+        ft1.setPointSize(15)
         self.image_preview = QLabel('No Info')
+        self.image_preview.setFont(ft1)
         self.image_preview.setAlignment(Qt.AlignCenter)
+        self.image_preview.setWordWrap(True)
 
         self.hbox_layout = QHBoxLayout()
         self.hbox_layout.addWidget(self.button_add_folder)
@@ -74,7 +78,7 @@ class FileExplorer(QWidget):
             QImg = QImage(resized_img_data, width, height, width*3, QImage.Format_RGB888)
             pixmap = QPixmap.fromImage(QImg)
             self.image_preview.setPixmap(pixmap)
-            self.parent.select_area.set_image(self.image_data)
+            self.parent.clip_area.set_image(self.image_data)
 
     def on_clicked_add_folder(self):
         self.new_folder_path = QFileDialog.getExistingDirectory(self, "Add Folder", self.new_folder_path)

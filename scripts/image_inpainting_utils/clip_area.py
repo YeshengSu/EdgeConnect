@@ -72,7 +72,7 @@ class ClipArea(QWidget):
         # pick color
         ft2 = QFont()
         ft2.setBold(True)
-        self.color_btn = QPushButton('Pick Pen Color', self)
+        self.color_btn = QPushButton('Pick Brush Color', self)
         self.color_btn.clicked.connect(self.on_clicked_color)
         self.color_btn.setFont(ft2)
         pla = self.color_btn.palette()
@@ -105,7 +105,6 @@ class ClipArea(QWidget):
         QImg = QImage(resized_img_data, width, height, width * 3, QImage.Format_RGB888)
         pixmap = QPixmap.fromImage(QImg)
         self.image_to_clip.setPixmap(pixmap)
-
         self.parent.setTabEnabled(1, True)
 
     def set_area(self, left_up_pos, size):
@@ -133,12 +132,12 @@ class ClipArea(QWidget):
         pixmap = QPixmap.fromImage(QImg)
         self.clip_area_preview.setPixmap(pixmap)
 
-        self.parent.setTabEnabled(2, True)
+        # pass image data to draw mask
+        self.parent.draw_mask.set_image(self.clip_image_data)
 
     def on_clicked_color(self):
         new_color = QColorDialog.getColor()
         if new_color.isValid():
-            print(new_color)
             pla = self.color_btn.palette()
             pla.setColor(QPalette.ButtonText, new_color)
             self.color_btn.setPalette(pla)
