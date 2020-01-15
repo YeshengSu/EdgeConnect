@@ -22,9 +22,9 @@ class Dataset(torch.utils.data.Dataset):
         self.mode = config.MODE
         self.augment = augment
         self.training = training
-        self.data = self.load_flist(flist)
+        self.data = self.load_flist(flist)  # 最好为n^2 的不带alpha的RGB图片
         self.edge_data = self.load_flist(edge_flist)
-        self.mask_data = self.load_flist(mask_flist)
+        self.mask_data = self.load_flist(mask_flist)  # 必须位图 类型为 Pil的 ‘1’
 
         self.input_size = config.INPUT_SIZE
         self.sigma = config.SIGMA
