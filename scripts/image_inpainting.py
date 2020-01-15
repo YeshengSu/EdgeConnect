@@ -18,8 +18,9 @@ class MainWindow(QTabWidget):
         self.draw_mask = DrawMask(self)
         self.image_inpainting = ImageInpainting(self)
 
-        self.setWindowTitle('Edge Connect')
         self.resize(1000, 800)
+        self.setWindowTitle('Edge Connect')
+
         self.addTab(self.file_explorer, 'File Explorer')
         self.addTab(self.clip_area, 'Select Area')
         self.addTab(self.draw_mask, 'Draw Mask')
