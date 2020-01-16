@@ -1,12 +1,23 @@
 import sys
-
-from PyQt5.QtGui import QPalette, QColor
+import numpy as np
+from PIL import Image
+from PyQt5.QtGui import QPalette, QColor, QImage, QPixmap
 from PyQt5.QtWidgets import QTabWidget, QApplication
 
 from image_inpainting_utils.draw_mask import DrawMask
 from image_inpainting_utils.file_explorer import FileExplorer
 from image_inpainting_utils.image_inpainting import ImageInpainting
 from image_inpainting_utils.clip_area import ClipArea
+
+
+def set_label_image(label, preview_width, ori_data):
+    preview_height = int(preview_width * ori_data.shape[0] / ori_data.shape[1])
+    resized_img_data = np.array(Image.fromarray(ori_data).resize((preview_width, preview_height), Image.HAMMING))
+    height, width, bytesPerComponent = resized_img_data.shape
+    QImg = QImage(resized_img_data, width, height, width * 3, QImage.Format_RGB888)
+    pixmap = QPixmap.fromImage(QImg)
+    label.setPixmap(pixmap)
+    return (width, height)
 
 
 class MainWindow(QTabWidget):
@@ -19,6 +30,7 @@ class MainWindow(QTabWidget):
         self.image_inpainting = ImageInpainting(self)
 
         self.resize(1000, 800)
+        self.setMinimumSize(1000, 800)
         self.setWindowTitle('Edge Connect')
 
         self.addTab(self.file_explorer, 'File Explorer')
@@ -29,6 +41,7 @@ class MainWindow(QTabWidget):
         self.setTabEnabled(1, False)
         self.setTabEnabled(2, False)
         self.setTabEnabled(3, False)
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

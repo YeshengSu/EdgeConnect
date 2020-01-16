@@ -56,6 +56,8 @@ class FileExplorer(QWidget):
         self.tree.expandAll()
 
     def on_clicked_tree_item(self, item, column):
+        from image_inpainting_demo import set_label_image
+
         self.image_preview.setText(item.text(column))
         self.click_item = item
 
@@ -72,12 +74,7 @@ class FileExplorer(QWidget):
             new_img = Image.open(image_path)
             new_img = new_img.convert('RGB')
             self.image_data = np.asarray(new_img)
-            preview_height = int(self.PREVIEW_WIDTH * self.image_data.shape[0] / self.image_data.shape[1])
-            resized_img_data = np.array(Image.fromarray(self.image_data).resize((self.PREVIEW_WIDTH, preview_height), Image.HAMMING))
-            height, width, bytesPerComponent = resized_img_data.shape
-            QImg = QImage(resized_img_data, width, height, width*3, QImage.Format_RGB888)
-            pixmap = QPixmap.fromImage(QImg)
-            self.image_preview.setPixmap(pixmap)
+            set_label_image(self.image_preview, self.PREVIEW_WIDTH, self.image_data)
             self.parent.clip_area.set_image(self.image_data)
 
     def on_clicked_add_folder(self):

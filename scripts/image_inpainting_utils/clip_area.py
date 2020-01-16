@@ -72,7 +72,7 @@ class ClipArea(QWidget):
         # pick color
         ft2 = QFont()
         ft2.setBold(True)
-        self.color_btn = QPushButton('Pick Brush Color', self)
+        self.color_btn = QPushButton('Color', self)
         self.color_btn.clicked.connect(self.on_clicked_color)
         self.color_btn.setFont(ft2)
         pla = self.color_btn.palette()
@@ -96,18 +96,14 @@ class ClipArea(QWidget):
         self.setLayout(self.grid_layout)
 
     def set_image(self, image_data):
+        from image_inpainting_demo import set_label_image
         self.show_image_data = image_data
-        preview_height = int(self.PREVIEW_SHOW_WIDTH * self.show_image_data.shape[0] / self.show_image_data.shape[1])
-        resized_img_data = np.array(
-            Image.fromarray(self.show_image_data).resize((self.PREVIEW_SHOW_WIDTH, preview_height), Image.HAMMING))
-        height, width, bytesPerComponent = resized_img_data.shape
-        self.show_image_size = (width, height)
-        QImg = QImage(resized_img_data, width, height, width * 3, QImage.Format_RGB888)
-        pixmap = QPixmap.fromImage(QImg)
-        self.image_to_clip.setPixmap(pixmap)
+        self.show_image_size = set_label_image(self.image_to_clip, self.PREVIEW_SHOW_WIDTH, self.show_image_data)
         self.parent.setTabEnabled(1, True)
 
     def set_area(self, left_up_pos, size):
+        from image_inpainting_demo import set_label_image
+
         show_width, show_height = self.show_image_size
         height, width, bytesPerComponent = self.show_image_data.shape
 
@@ -124,13 +120,7 @@ class ClipArea(QWidget):
         self.clip_image_data = np.asarray(cp_image)
 
         # preview
-        preview_height = int(self.PREVIEW_CLIP_WIDTH * self.clip_image_data.shape[0] / self.clip_image_data.shape[1])
-        resized_img_data = np.array(
-                Image.fromarray(self.clip_image_data).resize((self.PREVIEW_CLIP_WIDTH, preview_height), Image.HAMMING))
-        height, width, bytesPerComponent = resized_img_data.shape
-        QImg = QImage(resized_img_data, width, height, width * 3, QImage.Format_RGB888)
-        pixmap = QPixmap.fromImage(QImg)
-        self.clip_area_preview.setPixmap(pixmap)
+        set_label_image(self.clip_area_preview, self.PREVIEW_CLIP_WIDTH, self.clip_image_data)
 
         # pass image data to draw mask
         self.parent.draw_mask.set_image(self.clip_image_data)
