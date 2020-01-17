@@ -87,7 +87,7 @@ class ImageInpainting(QWidget):
         print('on_click_start')
 
     def on_clicked_show(self):
-        row_image_data = np.copy(self.parent.file_explorer.image_data)
+        row_image_data = np.copy(self.parent.file_explorer.image_selected_data)
         paste_pos_size = self.parent.clip_area.clip_pos_size
         x, y, width, height = paste_pos_size
 

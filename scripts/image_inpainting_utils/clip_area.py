@@ -45,7 +45,7 @@ class ClipableLabel(QLabel):
         max_side = min(abs(self.x1 - self.x0), abs(self.y1 - self.y0))
         rect = QRect(self.x0, self.y0, max_side, max_side)
         painter = QPainter(self)
-        painter.setPen(QPen(self.parent.pen_color, 2, Qt.SolidLine))
+        painter.setPen(QPen(self.parent.color_pen, 2, Qt.SolidLine))
         painter.drawRect(rect)
 
     def reset(self):
@@ -64,11 +64,11 @@ class ClipArea(QWidget):
     def __init__(self, parent=None):
         super(ClipArea, self).__init__(parent=parent)
         self.parent = parent
-        self.show_image_data = None
+        self.image_show_data = None
         self.show_image_size = (0, 0)
-        self.clip_image_data = None
+        self.image_clip_data = None
         self.clip_pos_size = (0, 0, 0, 0)
-        self.pen_color = QColor(50, 200, 50)
+        self.color_pen = QColor(50, 200, 50)
 
         # text tips
         ft1 = QFont()
@@ -81,34 +81,34 @@ class ClipArea(QWidget):
         # pick color
         ft2 = QFont()
         ft2.setBold(True)
-        self.color_btn = QPushButton('Color', self)
-        self.color_btn.clicked.connect(self.on_clicked_color)
-        self.color_btn.setFont(ft2)
-        pla = self.color_btn.palette()
-        pla.setColor(QPalette.ButtonText, self.pen_color)
-        self.color_btn.setPalette(pla)
+        self.btn_color = QPushButton('Color', self)
+        self.btn_color.clicked.connect(self.on_clicked_color)
+        self.btn_color.setFont(ft2)
+        pla = self.btn_color.palette()
+        pla.setColor(QPalette.ButtonText, self.color_pen)
+        self.btn_color.setPalette(pla)
 
         # image
-        self.image_to_clip = ClipableLabel('image clip', self)
-        self.image_to_clip.setAlignment(Qt.AlignTop)
-        self.image_to_clip.setCursor(Qt.CrossCursor)
-        self.clip_area_preview = QLabel('clip area preview')
-        self.clip_area_preview.setAlignment(Qt.AlignHCenter)
+        self.label_image_clip = ClipableLabel('image clip', self)
+        self.label_image_clip.setAlignment(Qt.AlignTop)
+        self.label_image_clip.setCursor(Qt.CrossCursor)
+        self.label_image_clip_preview = QLabel('clip area preview')
+        self.label_image_clip_preview.setAlignment(Qt.AlignHCenter)
 
         self.grid_layout = QGridLayout()
-        self.grid_layout.addWidget(self.color_btn, 0, 0, 1, 1)
+        self.grid_layout.addWidget(self.btn_color, 0, 0, 1, 1)
         self.grid_layout.addWidget(self.label_clip, 1, 0, 1, 5, Qt.AlignHCenter)
         self.grid_layout.addWidget(self.label_preview, 1, 5, 1, 5, Qt.AlignHCenter)
-        self.grid_layout.addWidget(self.image_to_clip, 2, 0, 10, 5)
-        self.grid_layout.addWidget(self.clip_area_preview, 2, 5, 10, 5, Qt.AlignTop)
+        self.grid_layout.addWidget(self.label_image_clip, 2, 0, 10, 5)
+        self.grid_layout.addWidget(self.label_image_clip_preview, 2, 5, 10, 5, Qt.AlignTop)
 
         self.setLayout(self.grid_layout)
 
-    def set_image(self, image_data):
+    def set_image(self, image_selected_data):
         from image_inpainting_demo import set_label_image
-        self.show_image_data = image_data
-        self.show_image_size = set_label_image(self.image_to_clip, self.PREVIEW_SHOW_WIDTH, self.show_image_data)
-        self.image_to_clip.reset()
+        self.image_show_data = image_selected_data
+        self.show_image_size = set_label_image(self.label_image_clip, self.PREVIEW_SHOW_WIDTH, self.image_show_data)
+        self.label_image_clip.reset()
         self.parent.setTabEnabled(1, True)
         self.parent.setTabEnabled(2, False)
         self.parent.setTabEnabled(3, False)
@@ -117,7 +117,7 @@ class ClipArea(QWidget):
         from image_inpainting_demo import set_label_image
 
         show_width, show_height = self.show_image_size
-        height, width, bytesPerComponent = self.show_image_data.shape
+        height, width, bytesPerComponent = self.image_show_data.shape
 
         # calculate row coordinate
         to_row_width, to_row_height = width / float(show_width), height / float(show_height)
@@ -128,20 +128,20 @@ class ClipArea(QWidget):
 
         # clip image
         self.clip_pos_size = (actual_x, actual_y, actual_width, actual_height)
-        row_image = Image.fromarray(self.show_image_data)
+        row_image = Image.fromarray(self.image_show_data)
         cp_image = row_image.crop((actual_x, actual_y, actual_x + actual_width, actual_y + actual_height))
-        self.clip_image_data = np.asarray(cp_image)
+        self.image_clip_data = np.asarray(cp_image)
 
         # preview
-        set_label_image(self.clip_area_preview, self.PREVIEW_CLIP_WIDTH, self.clip_image_data)
+        set_label_image(self.label_image_clip_preview, self.PREVIEW_CLIP_WIDTH, self.image_clip_data)
 
         # pass image data to draw mask
-        self.parent.draw_mask.set_image(self.clip_image_data)
+        self.parent.draw_mask.set_image(self.image_clip_data)
 
     def on_clicked_color(self):
         new_color = QColorDialog.getColor()
         if new_color.isValid():
-            pla = self.color_btn.palette()
+            pla = self.btn_color.palette()
             pla.setColor(QPalette.ButtonText, new_color)
-            self.color_btn.setPalette(pla)
-            self.pen_color = new_color
+            self.btn_color.setPalette(pla)
+            self.color_pen = new_color
