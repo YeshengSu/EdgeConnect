@@ -68,10 +68,10 @@ class DrawMask(QWidget):
         self.finish_btn.clicked.connect(self.on_clicked_finish)
 
         # image
-        self.image_to_mask = DrawLabel('image clip', self)
+        self.image_to_mask = DrawLabel('image draw', self)
         self.image_to_mask.setAlignment(Qt.AlignTop)
         self.image_to_mask.setCursor(Qt.CrossCursor)
-        self.mask_area_preview = QLabel('clip area preview')
+        self.mask_area_preview = QLabel('mask preview')
         self.mask_area_preview.setAlignment(Qt.AlignHCenter)
 
         self.grid_layout = QGridLayout()
@@ -154,4 +154,4 @@ class DrawMask(QWidget):
         self.refresh_mask_image()
 
     def on_clicked_finish(self):
-        self.parent.image_inpainting.set_image(self.mask_image_data)
+        self.parent.image_inpainting.set_image(self.clip_image_data ,self.mask_image_data)

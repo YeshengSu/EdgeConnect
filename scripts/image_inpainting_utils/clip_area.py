@@ -67,6 +67,7 @@ class ClipArea(QWidget):
         self.show_image_data = None
         self.show_image_size = (0, 0)
         self.clip_image_data = None
+        self.clip_pos_size = (0, 0, 0, 0)
         self.pen_color = QColor(50, 200, 50)
 
         # text tips
@@ -109,6 +110,8 @@ class ClipArea(QWidget):
         self.show_image_size = set_label_image(self.image_to_clip, self.PREVIEW_SHOW_WIDTH, self.show_image_data)
         self.image_to_clip.reset()
         self.parent.setTabEnabled(1, True)
+        self.parent.setTabEnabled(2, False)
+        self.parent.setTabEnabled(3, False)
 
     def set_area(self, left_up_pos, size):
         from image_inpainting_demo import set_label_image
@@ -124,6 +127,7 @@ class ClipArea(QWidget):
             return
 
         # clip image
+        self.clip_pos_size = (actual_x, actual_y, actual_width, actual_height)
         row_image = Image.fromarray(self.show_image_data)
         cp_image = row_image.crop((actual_x, actual_y, actual_x + actual_width, actual_y + actual_height))
         self.clip_image_data = np.asarray(cp_image)
