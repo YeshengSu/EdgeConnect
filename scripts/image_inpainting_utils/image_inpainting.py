@@ -12,6 +12,9 @@ class ImageInpainting(QWidget):
     PREVIEW_CLIP_MASK_WIDTH = 200
     PREVIEW_RESULT_WIDTH = 450
 
+    INFO_READY = 'Info : READY'
+    INFO_PROCESS = 'Info : Processing - {} %'
+
     def __init__(self, parent=None):
         super(ImageInpainting, self).__init__(parent=parent)
         self.parent = parent
@@ -20,19 +23,22 @@ class ImageInpainting(QWidget):
         self.image_clip_mask_data = None
         self.image_result_data = None
 
-        self.btn_finish = QPushButton('Start Process !', self)
-        self.btn_finish.clicked.connect(self.on_clicked_start)
+        self.btn_start = QPushButton('Start Process !', self)
+        self.btn_start.clicked.connect(self.on_clicked_start)
         self.btn_show = QPushButton('Show Final Image !', self)
         self.btn_show.clicked.connect(self.on_clicked_show)
 
         # label
-        ft1 = QFont()
+        ft1, ft2 = QFont(), QFont()
         ft1.setPointSize(15)
+        ft2.setPointSize(20)
         self.label_clip = QLabel('Origin image')
         self.label_mask = QLabel('Mask image')
         self.label_clip_mask = QLabel('Origin image with mask')
         self.label_result = QLabel('Result')
         self.label_result.setFont(ft1)
+        self.label_info = QLabel('Info: Ready')
+        self.label_info.setFont(ft2)
 
         # image
         self.label_image_clip = QLabel('image clip')
@@ -46,14 +52,15 @@ class ImageInpainting(QWidget):
         self.vbox_layout1.addWidget(self.label_mask)
         self.vbox_layout1.addWidget(self.label_image_mask)
         self.vbox_layout1.addWidget(self.label_clip_mask)
-        self.vbox_layout1.addWidget(self.label_image_clip_mask)
+        self.vbox_layout1.addWidget(self.label_image_clip_mask, 3)
 
         self.vbox_layout2 = QVBoxLayout()
         self.vbox_layout2.addWidget(self.label_result)
         self.vbox_layout2.addWidget(self.label_image_result)
+        self.vbox_layout2.addWidget(self.label_info)
 
         self.grid_layout = QGridLayout()
-        self.grid_layout.addWidget(self.btn_finish, 0, 0, 1, 3)
+        self.grid_layout.addWidget(self.btn_start, 0, 0, 1, 3)
         self.grid_layout.addWidget(self.btn_show, 0, 4, 1, 3)
         self.grid_layout.addLayout(self.vbox_layout1, 1, 0, 9, 3)
         self.grid_layout.addLayout(self.vbox_layout2, 1, 6, 9, 9, Qt.AlignCenter)
@@ -85,6 +92,9 @@ class ImageInpainting(QWidget):
 
     def on_clicked_start(self):
         print('on_click_start')
+        self.btn_start.setEnabled(False)
+        self.label_info.setText(self.INFO_PROCESS.format(0))
+        self.image_inpainting()
 
     def on_clicked_show(self):
         row_image_data = np.copy(self.parent.file_explorer.image_selected_data)
@@ -95,3 +105,6 @@ class ImageInpainting(QWidget):
         result_img = Image.fromarray(self.image_result_data)
         row_img.paste(result_img, (x, y, x + width, y + height))
         row_img.show('inpainted image')
+
+    def image_inpainting(self):
+        pass
