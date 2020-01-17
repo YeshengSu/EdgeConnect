@@ -48,6 +48,14 @@ class ClipableLabel(QLabel):
         painter.setPen(QPen(self.parent.pen_color, 2, Qt.SolidLine))
         painter.drawRect(rect)
 
+    def reset(self):
+        self.x0 = 0
+        self.y0 = 0
+        self.x1 = 0
+        self.y1 = 0
+        self.flag = False
+        self.update()
+
 
 class ClipArea(QWidget):
     PREVIEW_SHOW_WIDTH = 450
@@ -99,6 +107,7 @@ class ClipArea(QWidget):
         from image_inpainting_demo import set_label_image
         self.show_image_data = image_data
         self.show_image_size = set_label_image(self.image_to_clip, self.PREVIEW_SHOW_WIDTH, self.show_image_data)
+        self.image_to_clip.reset()
         self.parent.setTabEnabled(1, True)
 
     def set_area(self, left_up_pos, size):

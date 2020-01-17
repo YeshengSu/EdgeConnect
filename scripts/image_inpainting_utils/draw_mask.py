@@ -40,6 +40,7 @@ class DrawMask(QWidget):
         self.clip_image_data = None
         self.show_image_size = (0, 0)
         self.mask_image_data = None
+        self.draw_image_data = None
         self.pen_color = QColor(50, 200, 50)
         self.brush_size = 6
 
@@ -90,6 +91,9 @@ class DrawMask(QWidget):
         # show preview
         self.show_image_size = set_label_image(self.image_to_mask, self.PREVIEW_CLIP_WIDTH, self.clip_image_data)
 
+        # draw image
+        self.draw_image_data = np.copy(self.clip_image_data)
+
         # create mask
         self.mask_image_data = np.copy(self.clip_image_data)
         self.mask_image_data[:, :] = 0
@@ -113,17 +117,22 @@ class DrawMask(QWidget):
 
         self.mask_image_data[y0:y1 + 1, x0:x1 + 1] = 255
         set_label_image(self.mask_area_preview, self.PREVIEW_MASK_WIDTH, self.mask_image_data)
-        self.refresh_mask_image()
+        self.refresh_mask_image((x0,y0,x1,y1))
 
         # print('draw _x:{}, _y:{}'.format(actual_x, actual_y))
 
-    def refresh_mask_image(self):
+    def refresh_mask_image(self, x0y0_x1y1=None):
         from image_inpainting_demo import set_label_image
 
         color = (self.pen_color.red(), self.pen_color.green(), self.pen_color.blue())
-        mask_data = (self.mask_image_data/255 * color) + ((1 - self.mask_image_data/255) * self.clip_image_data)
-        mask_data = np.array(mask_data, np.uint8)
-        set_label_image(self.image_to_mask, self.PREVIEW_CLIP_WIDTH, mask_data)
+        if x0y0_x1y1:
+            x1, y1 = x0y0_x1y1[2], x0y0_x1y1[3]
+            x0, y0 = x0y0_x1y1[0], x0y0_x1y1[1]
+            self.draw_image_data[y0:y1 + 1, x0:x1 + 1] = color
+        else:
+            self.draw_image_data = np.copy((self.mask_image_data/255 * color) + ((1 - self.mask_image_data/255) * self.clip_image_data))
+            self.draw_image_data = np.array(self.draw_image_data, np.uint8)
+        set_label_image(self.image_to_mask, self.PREVIEW_CLIP_WIDTH, self.draw_image_data)
 
     def on_clicked_color(self):
         new_color = QColorDialog.getColor()
@@ -135,7 +144,6 @@ class DrawMask(QWidget):
             self.refresh_mask_image()
 
     def on_change_brush_size(self):
-        print(self.select_brush_size.value())
         self.brush_size = int(self.select_brush_size.value())
 
     def on_clicked_clear(self):
