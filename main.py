@@ -66,7 +66,7 @@ def main(mode=None):
         model.eval()
 
 
-def load_config(mode=None):
+def load_config(mode=None, path=None):
     r"""loads model config
 
     Args:
@@ -85,11 +85,13 @@ def load_config(mode=None):
         parser.add_argument('--output', type=str, help='path to the output directory')
 
     args = parser.parse_args()
-    config_path = os.path.join(args.path, 'config.yml')
+
+    cfg_path = args.path if not path else path
+    config_path = os.path.join(cfg_path, 'config.yml')
 
     # create checkpoints path if does't exist
-    if not os.path.exists(args.path):
-        os.makedirs(args.path)
+    if not os.path.exists(cfg_path):
+        os.makedirs(cfg_path)
 
     # copy config template if does't exist
     if not os.path.exists(config_path):

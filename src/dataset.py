@@ -27,6 +27,7 @@ class Dataset(torch.utils.data.Dataset):
         self.mask_data = self.load_flist(mask_flist)  # 必须位图 类型为 Pil的 ‘1’
 
         self.input_size = config.INPUT_SIZE
+        self.max_power_2 = config.MAX_POWER_2
         self.sigma = config.SIGMA
         self.edge = config.EDGE
         self.mask = config.MASK
@@ -71,7 +72,7 @@ class Dataset(torch.utils.data.Dataset):
             img = utils.resize(ori_img, size, size, self.is_center_crop)
         else:
             max_size = max(ori_img.shape[0], ori_img.shape[1])
-            max_size = 2 ** math.ceil(math.log2(max_size))
+            max_size = 2 ** min(math.ceil(math.log2(max_size)), self.max_power_2)
             img = utils.resize(ori_img, max_size, max_size, self.is_center_crop)
 
         # create grayscale image

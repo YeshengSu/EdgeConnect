@@ -32,6 +32,7 @@ class ImageDataset(torch.utils.data.Dataset):
         self.mask_data = mask_data  # 必须位图 类型为 Pil的 ‘1’
 
         self.input_size = config.INPUT_SIZE
+        self.max_power_2 = config.MAX_POWER_2
         self.sigma = config.SIGMA
         self.edge = config.EDGE
         self.mask = config.MASK
@@ -72,7 +73,7 @@ class ImageDataset(torch.utils.data.Dataset):
             img = utils.resize(ori_img, size, size, self.is_center_crop)
         else:
             max_size = max(ori_img.shape[0], ori_img.shape[1])
-            max_size = 2 ** math.ceil(math.log2(max_size))
+            max_size = 2 ** min(math.ceil(math.log2(max_size)), self.max_power_2)
             img = utils.resize(ori_img, max_size, max_size, self.is_center_crop)
 
         # create grayscale image
@@ -191,7 +192,7 @@ class ImageInpainting(QWidget):
     PREVIEW_RESULT_WIDTH = 450
 
     INFO_READY = 'Info : READY'
-    INFO_PROCESS = 'Info : Processing....'
+    INFO_PROCESS = 'Info : Processing....{}%'
     INFO_FINSH = 'Info : ACCOMPLISHMENT !'
 
     def __init__(self, parent=None):
@@ -273,7 +274,7 @@ class ImageInpainting(QWidget):
         print('on_click_start')
         self.btn_start.setEnabled(False)
         self.btn_show.setEnabled(False)
-        self.label_info.setText(self.INFO_PROCESS)
+        self.label_info.setText(self.INFO_PROCESS.format(0))
         self.image_inpainting()
 
     def on_clicked_show(self):
@@ -289,12 +290,13 @@ class ImageInpainting(QWidget):
     def image_inpainting(self):
         from image_inpainting_demo import set_label_image
         from main import load_config
-        from models import EdgeModel
-        from models import InpaintingModel
+        from src.models import EdgeModel
+        from src.models import InpaintingModel
 
         mode = 2  # test
 
-        config = load_config(mode)  # start test
+        config = load_config(mode, '.././checkpoints')  # start test
+        self.label_info.setText(self.INFO_PROCESS.format(10))
 
         # cuda visble devices
         os.environ['CUDA_VISIBLE_DEVICES'] = ','.join(str(e) for e in config.GPU)
@@ -310,12 +312,14 @@ class ImageInpainting(QWidget):
         cv2.setNumThreads(0)
 
         # initialize random seed
+        self.label_info.setText(self.INFO_PROCESS.format(20))
         torch.manual_seed(config.SEED)
         torch.cuda.manual_seed_all(config.SEED)
         np.random.seed(config.SEED)
         random.seed(config.SEED)
 
         # init edge connect
+        self.label_info.setText(self.INFO_PROCESS.format(40))
         model_name = 'edge_inpaint'
         edge_model = EdgeModel(config).to(config.DEVICE)
         inpaint_model = InpaintingModel(config).to(config.DEVICE)
@@ -329,22 +333,30 @@ class ImageInpainting(QWidget):
         inpaint_model.load()
 
         # start testing
+        self.label_info.setText(self.INFO_PROCESS.format(50))
         print('\nstart testing...\n')
 
         edge_model.eval()
         inpaint_model.eval()
         test_loader = DataLoader(dataset=test_dataset, batch_size=1)
 
+        def to_cuda(*args):
+            return (item.to(config.DEVICE) if hasattr(item, 'to') else item for item in args)
+
+        self.label_info.setText(self.INFO_PROCESS.format(80))
         for items in test_loader:
-            ori_shapes, images, images_gray, edges, masks = self.cuda(*items)
-            edges = self.edge_model(images_gray, edges, masks).detach()
-            outputs = self.inpaint_model(images, edges, masks)
+            ori_shapes, images, images_gray, edges, masks = to_cuda(*items)
+            edges = edge_model(images_gray, edges, masks).detach()
+            outputs = inpaint_model(images, edges, masks)
             outputs_merged = (outputs * masks) + (images * (1 - masks))
 
+
             # postprocess
+            self.label_info.setText(self.INFO_PROCESS.format(90))
             outputs_merged = outputs_merged * 255.0
             outputs_merged = outputs_merged.permute(0, 2, 3, 1)
             output = outputs_merged.int()
+            output = output[0]
 
             # output result img
             ori_shapes = [t.item() for t in ori_shapes]
