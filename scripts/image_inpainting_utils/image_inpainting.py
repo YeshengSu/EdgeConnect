@@ -1,5 +1,5 @@
 import cv2
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QThread
 import glob
 import os
 import random
@@ -184,6 +184,13 @@ class ImageDataset(torch.utils.data.Dataset):
                 yield item
 
 
+class InpaintingThread(QThread):
+    def __init__(self, parent):
+        super(InpaintingThread, self).__init__(parent)
+        self.parent = parent
+
+    def run(self):
+        self.parent.image_inpainting()
 
 class ImageInpainting(QWidget):
     PREVIEW_CLIP_WIDTH = 200
@@ -207,6 +214,8 @@ class ImageInpainting(QWidget):
         self.btn_start.clicked.connect(self.on_clicked_start)
         self.btn_show = QPushButton('Show Final Image !', self)
         self.btn_show.clicked.connect(self.on_clicked_show)
+
+        self.thread_inpainting = InpaintingThread(self)
 
         # label
         ft1, ft2 = QFont(), QFont()
@@ -274,8 +283,11 @@ class ImageInpainting(QWidget):
         print('on_click_start')
         self.btn_start.setEnabled(False)
         self.btn_show.setEnabled(False)
+        self.parent.setTabEnabled(0, False)
+        self.parent.setTabEnabled(1, False)
+        self.parent.setTabEnabled(2, False)
         self.label_info.setText(self.INFO_PROCESS.format(0))
-        self.image_inpainting()
+        self.thread_inpainting.start()
 
     def on_clicked_show(self):
         row_image_data = np.copy(self.parent.file_explorer.image_selected_data)
@@ -372,4 +384,7 @@ class ImageInpainting(QWidget):
 
         self.btn_start.setEnabled(True)
         self.btn_show.setEnabled(True)
+        self.parent.setTabEnabled(0, True)
+        self.parent.setTabEnabled(1, True)
+        self.parent.setTabEnabled(2, True)
         self.label_info.setText(self.INFO_FINSH)
