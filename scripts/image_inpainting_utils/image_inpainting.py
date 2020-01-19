@@ -241,7 +241,7 @@ class ImageInpainting(QWidget):
         self.vbox_layout1.addWidget(self.label_mask)
         self.vbox_layout1.addWidget(self.label_image_mask)
         self.vbox_layout1.addWidget(self.label_clip_mask)
-        self.vbox_layout1.addWidget(self.label_image_clip_mask, 3)
+        self.vbox_layout1.addWidget(self.label_image_clip_mask)
 
         self.vbox_layout2 = QVBoxLayout()
         self.vbox_layout2.addWidget(self.label_result)
