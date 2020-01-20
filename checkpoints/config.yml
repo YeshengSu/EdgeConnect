@@ -20,7 +20,7 @@ TRAIN_MASK_FLIST: ./datasets/masks_train.flist
 VAL_MASK_FLIST: ./datasets/masks_val.flist
 TEST_MASK_FLIST: ./datasets/masks_test.flist
 
-LR: 0.0001                    # learning rate
+LR: 0.0001                    # learning rate 2:0.00001 3:0.000001
 D2G_LR: 0.1                   # discriminator/generator learning rate ratio
 BETA1: 0.0                    # adam optimizer beta1
 BETA2: 0.9                    # adam optimizer beta2

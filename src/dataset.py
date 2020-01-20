@@ -12,6 +12,7 @@ from skimage.color import rgb2gray, gray2rgb
 from skimage.feature import canny
 from torch.utils.data import DataLoader
 
+import mask_generator
 import utils
 from .utils import create_mask
 
@@ -143,7 +144,8 @@ class Dataset(torch.utils.data.Dataset):
 
         # random block
         if mask_type == 1:
-            return create_mask(imgw, imgh, imgw // 2, imgh // 2)
+            # return create_mask(imgw, imgh, imgw // 2, imgh // 2)
+            return mask_generator.generate_random_mask(np.random.rand(2, 8), imgh, imgw)
 
         # half
         if mask_type == 2:
