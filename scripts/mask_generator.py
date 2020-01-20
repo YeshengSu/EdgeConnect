@@ -62,7 +62,7 @@ def generate_random_mask(thetas, height=128, width=128):
     thetas[:, 6:8] = thetas[:, 6:8] * (average_size // 8) + 2
 
     # draw the random strokes(mask)
-    canvas = np.ones([height, width], dtype=np.uint8)
+    canvas = np.zeros([height, width])
     gap = average_size // 2
 
     for idx, para in enumerate(thetas):
@@ -79,7 +79,7 @@ def generate_random_mask(thetas, height=128, width=128):
             y = int(pp * y2 + pq2 * y1 + qq * y0)
             z = int(p * z2 + q * z0)
 
-            cv2.circle(canvas, (y, x), z, 0, -1)  # img, center, radius, color,
+            cv2.circle(canvas, (y, x), z, 1, -1)  # img, center, radius, color,
 
     return canvas
 
