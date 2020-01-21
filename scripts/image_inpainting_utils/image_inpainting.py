@@ -199,7 +199,7 @@ class ImageInpainting(QWidget):
     PREVIEW_RESULT_WIDTH = 450
 
     INFO_READY = 'Info : READY'
-    INFO_PROCESS = 'Info : Processing....{}%'
+    INFO_PROCESS = 'Info : Processing......'
     INFO_FINSH = 'Info : ACCOMPLISHMENT !'
 
     def __init__(self, parent=None):
@@ -209,6 +209,8 @@ class ImageInpainting(QWidget):
         self.image_mask_data = None
         self.image_clip_mask_data = None
         self.image_result_data = None
+        self.edge_model = None
+        self.inpaint_model = None
 
         self.btn_start = QPushButton('Start Process !', self)
         self.btn_start.clicked.connect(self.on_clicked_start)
@@ -226,7 +228,7 @@ class ImageInpainting(QWidget):
         self.label_clip_mask = QLabel('Origin image with mask')
         self.label_result = QLabel('Result')
         self.label_result.setFont(ft1)
-        self.label_info = QLabel('Info: Ready')
+        self.label_info = QLabel(self.INFO_READY)
         self.label_info.setFont(ft2)
 
         # image
@@ -277,6 +279,7 @@ class ImageInpainting(QWidget):
         set_label_image(self.label_image_result, self.PREVIEW_RESULT_WIDTH, self.image_result_data)
 
         self.parent.setTabEnabled(3, True)
+        self.label_info.setText(self.INFO_READY)
         return
 
     def on_clicked_start(self):
@@ -286,7 +289,7 @@ class ImageInpainting(QWidget):
         self.parent.setTabEnabled(0, False)
         self.parent.setTabEnabled(1, False)
         self.parent.setTabEnabled(2, False)
-        self.label_info.setText(self.INFO_PROCESS.format(0))
+        self.label_info.setText(self.INFO_PROCESS)
         self.thread_inpainting.start()
 
     def on_clicked_show(self):
@@ -308,7 +311,6 @@ class ImageInpainting(QWidget):
         mode = 2  # test
 
         config = load_config(mode, '.././checkpoints')  # start test
-        self.label_info.setText(self.INFO_PROCESS.format(10))
 
         # cuda visble devices
         os.environ['CUDA_VISIBLE_DEVICES'] = ','.join(str(e) for e in config.GPU)
@@ -324,47 +326,43 @@ class ImageInpainting(QWidget):
         cv2.setNumThreads(0)
 
         # initialize random seed
-        self.label_info.setText(self.INFO_PROCESS.format(20))
         torch.manual_seed(config.SEED)
         torch.cuda.manual_seed_all(config.SEED)
         np.random.seed(config.SEED)
         random.seed(config.SEED)
 
-        # init edge connect
-        self.label_info.setText(self.INFO_PROCESS.format(40))
-        model_name = 'edge_inpaint'
-        edge_model = EdgeModel(config).to(config.DEVICE)
-        inpaint_model = InpaintingModel(config).to(config.DEVICE)
+        if not self.edge_model and not self.inpaint_model:
+            model_name = 'edge_inpaint'
+            self.edge_model = EdgeModel(config).to(config.DEVICE)
+            self.inpaint_model = InpaintingModel(config).to(config.DEVICE)
+            # load model
+            self.edge_model.load()
+            self.inpaint_model.load()
+            # init edge connect
+            self.edge_model.eval()
+            self.inpaint_model.eval()
 
         # load dataset
         test_dataset = ImageDataset(config, [self.image_clip_data], [], [self.image_mask_data],
                                     augment=False, training=False)
 
-        # load model
-        edge_model.load()
-        inpaint_model.load()
-
         # start testing
-        self.label_info.setText(self.INFO_PROCESS.format(50))
         print('\nstart testing...\n')
 
-        edge_model.eval()
-        inpaint_model.eval()
+
         test_loader = DataLoader(dataset=test_dataset, batch_size=1)
 
         def to_cuda(*args):
             return (item.to(config.DEVICE) if hasattr(item, 'to') else item for item in args)
 
-        self.label_info.setText(self.INFO_PROCESS.format(80))
         for items in test_loader:
             ori_shapes, images, images_gray, edges, masks = to_cuda(*items)
-            edges = edge_model(images_gray, edges, masks).detach()
-            outputs = inpaint_model(images, edges, masks)
+            edges = self.edge_model(images_gray, edges, masks).detach()
+            outputs = self.inpaint_model(images, edges, masks)
             outputs_merged = (outputs * masks) + (images * (1 - masks))
 
 
             # postprocess
-            self.label_info.setText(self.INFO_PROCESS.format(90))
             outputs_merged = outputs_merged * 255.0
             outputs_merged = outputs_merged.permute(0, 2, 3, 1)
             output = outputs_merged.int()
