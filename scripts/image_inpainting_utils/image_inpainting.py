@@ -196,6 +196,7 @@ class ImageInpainting(QWidget):
     PREVIEW_CLIP_WIDTH = 200
     PREVIEW_MASK_WIDTH = 200
     PREVIEW_CLIP_MASK_WIDTH = 200
+    PREVIEW_EDGE_WIDTH = 200
     PREVIEW_RESULT_WIDTH = 450
 
     INFO_READY = 'Info : READY'
@@ -208,9 +209,11 @@ class ImageInpainting(QWidget):
         self.image_clip_data = None
         self.image_mask_data = None
         self.image_clip_mask_data = None
+        self.image_edge_data = None
         self.image_result_data = None
         self.edge_model = None
         self.inpaint_model = None
+        self.config = None
 
         self.btn_start = QPushButton('Start Process !', self)
         self.btn_start.clicked.connect(self.on_clicked_start)
@@ -226,6 +229,7 @@ class ImageInpainting(QWidget):
         self.label_clip = QLabel('Origin image')
         self.label_mask = QLabel('Mask image')
         self.label_clip_mask = QLabel('Origin image with mask')
+        self.label_edge = QLabel('generated edge image')
         self.label_result = QLabel('Result')
         self.label_result.setFont(ft1)
         self.label_info = QLabel(self.INFO_READY)
@@ -235,26 +239,31 @@ class ImageInpainting(QWidget):
         self.label_image_clip = QLabel('image clip')
         self.label_image_mask = QLabel('image mask')
         self.label_image_clip_mask = QLabel('image clip mask')
+        self.label_image_edge = QLabel('image edge')
         self.label_image_result = QLabel('image mask')
 
         self.vbox_layout1 = QVBoxLayout()
-        self.vbox_layout1.addWidget(self.label_clip)
+        self.vbox_layout1.addWidget(self.label_clip, alignment=Qt.AlignBottom)
         self.vbox_layout1.addWidget(self.label_image_clip)
-        self.vbox_layout1.addWidget(self.label_mask)
+        self.vbox_layout1.addWidget(self.label_mask, alignment=Qt.AlignBottom)
         self.vbox_layout1.addWidget(self.label_image_mask)
-        self.vbox_layout1.addWidget(self.label_clip_mask)
-        self.vbox_layout1.addWidget(self.label_image_clip_mask)
-
         self.vbox_layout2 = QVBoxLayout()
-        self.vbox_layout2.addWidget(self.label_result)
-        self.vbox_layout2.addWidget(self.label_image_result)
-        self.vbox_layout2.addWidget(self.label_info)
+        self.vbox_layout2.addWidget(self.label_clip_mask, alignment=Qt.AlignBottom)
+        self.vbox_layout2.addWidget(self.label_image_clip_mask)
+        self.vbox_layout2.addWidget(self.label_edge, alignment=Qt.AlignBottom)
+        self.vbox_layout2.addWidget(self.label_image_edge)
+
+        self.vbox_layout3 = QVBoxLayout()
+        self.vbox_layout3.addWidget(self.label_result)
+        self.vbox_layout3.addWidget(self.label_image_result)
+        self.vbox_layout3.addWidget(self.label_info)
 
         self.grid_layout = QGridLayout()
         self.grid_layout.addWidget(self.btn_start, 0, 0, 1, 3)
         self.grid_layout.addWidget(self.btn_show, 0, 4, 1, 3)
-        self.grid_layout.addLayout(self.vbox_layout1, 1, 0, 9, 3)
-        self.grid_layout.addLayout(self.vbox_layout2, 1, 6, 9, 9, Qt.AlignCenter)
+        self.grid_layout.addLayout(self.vbox_layout1, 1, 0, 8, 3)
+        self.grid_layout.addLayout(self.vbox_layout2, 1, 3, 8, 3)
+        self.grid_layout.addLayout(self.vbox_layout3, 1, 6, 9, 9, Qt.AlignCenter)
         self.setLayout(self.grid_layout)
 
     def set_image(self, image_clip_data, image_mask_data):
@@ -273,6 +282,10 @@ class ImageInpainting(QWidget):
         self.image_clip_mask_data = np.copy((self.image_mask_data / 255 * color) + ((1 - self.image_mask_data / 255) * self.image_clip_data))
         self.image_clip_mask_data = np.array(self.image_clip_mask_data, np.uint8)
         set_label_image(self.label_image_clip_mask, self.PREVIEW_CLIP_MASK_WIDTH, self.image_clip_mask_data)
+
+        # edge image
+        self.image_edge_data = np.copy(self.image_clip_mask_data)
+        set_label_image(self.label_image_edge, self.PREVIEW_EDGE_WIDTH, self.image_edge_data)
 
         # result image
         self.image_result_data = np.copy(self.image_clip_mask_data)
@@ -310,31 +323,32 @@ class ImageInpainting(QWidget):
 
         mode = 2  # test
 
-        config = load_config(mode, '.././checkpoints')  # start test
+        if not self.config:
+            self.config = load_config(mode, '.././checkpoints')  # start test
 
         # cuda visble devices
-        os.environ['CUDA_VISIBLE_DEVICES'] = ','.join(str(e) for e in config.GPU)
+        os.environ['CUDA_VISIBLE_DEVICES'] = ','.join(str(e) for e in self.config.GPU)
 
         # init device
         if torch.cuda.is_available():
-            config.DEVICE = torch.device("cuda")
+            self.config.DEVICE = torch.device("cuda")
             torch.backends.cudnn.benchmark = True  # cudnn auto-tuner
         else:
-            config.DEVICE = torch.device("cpu")
+            self.config.DEVICE = torch.device("cpu")
 
         # set cv2 running threads to 1 (prevents deadlocks with pytorch dataloader)
         cv2.setNumThreads(0)
 
         # initialize random seed
-        torch.manual_seed(config.SEED)
-        torch.cuda.manual_seed_all(config.SEED)
-        np.random.seed(config.SEED)
-        random.seed(config.SEED)
+        torch.manual_seed(self.config.SEED)
+        torch.cuda.manual_seed_all(self.config.SEED)
+        np.random.seed(self.config.SEED)
+        random.seed(self.config.SEED)
 
         if not self.edge_model and not self.inpaint_model:
             model_name = 'edge_inpaint'
-            self.edge_model = EdgeModel(config).to(config.DEVICE)
-            self.inpaint_model = InpaintingModel(config).to(config.DEVICE)
+            self.edge_model = EdgeModel(self.config).to(self.config.DEVICE)
+            self.inpaint_model = InpaintingModel(self.config).to(self.config.DEVICE)
             # load model
             self.edge_model.load()
             self.inpaint_model.load()
@@ -343,7 +357,7 @@ class ImageInpainting(QWidget):
             self.inpaint_model.eval()
 
         # load dataset
-        test_dataset = ImageDataset(config, [self.image_clip_data], [], [self.image_mask_data],
+        test_dataset = ImageDataset(self.config, [self.image_clip_data], [], [self.image_mask_data],
                                     augment=False, training=False)
 
         # start testing
@@ -353,7 +367,7 @@ class ImageInpainting(QWidget):
         test_loader = DataLoader(dataset=test_dataset, batch_size=1)
 
         def to_cuda(*args):
-            return (item.to(config.DEVICE) if hasattr(item, 'to') else item for item in args)
+            return (item.to(self.config.DEVICE) if hasattr(item, 'to') else item for item in args)
 
         for items in test_loader:
             ori_shapes, images, images_gray, edges, masks = to_cuda(*items)
@@ -361,19 +375,13 @@ class ImageInpainting(QWidget):
             outputs = self.inpaint_model(images, edges, masks)
             outputs_merged = (outputs * masks) + (images * (1 - masks))
 
-
-            # postprocess
-            outputs_merged = outputs_merged * 255.0
-            outputs_merged = outputs_merged.permute(0, 2, 3, 1)
-            output = outputs_merged.int()
-            output = output[0]
+            # output edge img
+            image_edge_data = self._get_image_data_from_tensor(edges, ori_shapes)
+            self.image_edge_data = image_edge_data
+            set_label_image(self.label_image_edge, self.PREVIEW_EDGE_WIDTH, self.image_edge_data)
 
             # output result img
-            ori_shapes = [t.item() for t in ori_shapes]
-            image = output.cpu().numpy().astype(np.uint8)
-            image = utils.resize(image, ori_shapes[0], ori_shapes[1], False)
-            image_result_data = image.squeeze()
-
+            image_result_data = self._get_image_data_from_tensor(outputs_merged, ori_shapes)
             self.image_result_data = image_result_data
             set_label_image(self.label_image_result, self.PREVIEW_RESULT_WIDTH, self.image_result_data)
 
@@ -386,3 +394,18 @@ class ImageInpainting(QWidget):
         self.parent.setTabEnabled(1, True)
         self.parent.setTabEnabled(2, True)
         self.label_info.setText(self.INFO_FINSH)
+
+    def _get_image_data_from_tensor(self, gpu_data, ori_shapes):
+        # postprocess
+        outputs_merged = gpu_data * 255.0
+        outputs_merged = outputs_merged.permute(0, 2, 3, 1)
+        output = outputs_merged.int()
+        output = output[0]
+
+        # output result img
+        ori_shapes = [t.item() for t in ori_shapes]
+        image = output.cpu().numpy().astype(np.uint8)
+        image = utils.resize(image, ori_shapes[0], ori_shapes[1], False)
+        image_data = image.squeeze()
+
+        return image_data
