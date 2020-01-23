@@ -12,7 +12,8 @@ from image_inpainting_utils.clip_area import ClipArea
 
 def set_label_image(label, preview_width, ori_data):
     preview_height = int(preview_width * ori_data.shape[0] / ori_data.shape[1])
-    resized_img_data = np.array(Image.fromarray(ori_data).resize((preview_width, preview_height), Image.HAMMING))
+    image = Image.fromarray(ori_data).resize((preview_width, preview_height), Image.HAMMING)
+    resized_img_data = np.asarray(image.convert('RGB'))
     height, width, bytesPerComponent = resized_img_data.shape
     QImg = QImage(resized_img_data, width, height, width * 3, QImage.Format_RGB888)
     pixmap = QPixmap.fromImage(QImg)

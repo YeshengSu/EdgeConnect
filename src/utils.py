@@ -49,7 +49,7 @@ def resize(img, height, width, centerCrop=True):
         i = (imgw - side) // 2
         img = img[j:j + side, i:i + side, ...]
 
-    img = np.array(Image.fromarray(img).resize((width, height), Image.BOX))
+    img = np.array(Image.fromarray(img).resize((width, height), Image.HAMMING))
     return img
 
 def imshow(img, title=''):
