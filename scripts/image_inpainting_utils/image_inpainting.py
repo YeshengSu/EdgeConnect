@@ -284,11 +284,11 @@ class ImageInpainting(QWidget):
         set_label_image(self.label_image_clip_mask, self.PREVIEW_CLIP_MASK_WIDTH, self.image_clip_mask_data)
 
         # edge image
-        self.image_edge_data = np.copy(self.image_clip_mask_data)
+        self.image_edge_data = np.zeros(self.image_clip_mask_data.shape, np.uint8)
         set_label_image(self.label_image_edge, self.PREVIEW_EDGE_WIDTH, self.image_edge_data)
 
         # result image
-        self.image_result_data = np.zeros(self.image_clip_mask_data.shape, np.uint8)
+        self.image_result_data = np.copy(self.image_clip_mask_data)
         set_label_image(self.label_image_result, self.PREVIEW_RESULT_WIDTH, self.image_result_data)
 
         self.parent.setTabEnabled(3, True)
