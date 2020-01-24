@@ -62,6 +62,7 @@ class ImageDataset(torch.utils.data.Dataset):
 
         # load image
         ori_img = self.data[index]
+        img = np.array(ori_img)
 
         # gray to rgb
         if len(ori_img.shape) < 3:
@@ -78,7 +79,7 @@ class ImageDataset(torch.utils.data.Dataset):
         mask = self.load_mask(img, index)
 
         # resize/crop if needed
-        if size == 0:
+        if size != 0:
             img_shape = img.shape
             mask = utils.resize(mask, img_shape[0], img_shape[1], self.is_center_crop)
 
