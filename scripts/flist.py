@@ -1,11 +1,5 @@
 import os
-import argparse
 import numpy as np
-
-parser = argparse.ArgumentParser()
-parser.add_argument('--path', type=str, help='path to the dataset')
-parser.add_argument('--output', type=str, help='path to the file list')
-args = parser.parse_args()
 
 ext = {'.JPG', '.JPEG', '.PNG', '.TIF', 'TIFF'}
 
