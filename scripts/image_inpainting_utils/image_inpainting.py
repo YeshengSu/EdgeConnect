@@ -19,8 +19,6 @@ from torch.utils.data import DataLoader
 
 import utils
 
-
-
 class ImageDataset(torch.utils.data.Dataset):
     def __init__(self, config, data, edge_data, mask_data, augment=True, training=True):
         super(ImageDataset, self).__init__()
@@ -312,15 +310,29 @@ class ImageInpainting(QWidget):
         row_img.show('inpainted image')
 
     def image_inpainting(self):
+        from shutil import copyfile
+
         from image_inpainting_demo import set_label_image
-        from main import load_config
         from src.models import EdgeModel
         from src.models import InpaintingModel
+        from config import Config
 
         mode = 2  # test
 
         if not self.config:
-            self.config = load_config(mode, '.././checkpoints')  # start test
+            cfg_path = '.././checkpoints'
+            config_path = os.path.join(cfg_path, 'config.yml')
+            # create checkpoints path if does't exist
+            if not os.path.exists(cfg_path):
+                os.makedirs(cfg_path)
+
+            # copy config template if does't exist
+            if not os.path.exists(config_path):
+                copyfile('./config.yml.example', config_path)
+
+            # load config file
+            self.config = Config(config_path)
+            self.config.MODE = mode
 
         # cuda visble devices
         os.environ['CUDA_VISIBLE_DEVICES'] = ','.join(str(e) for e in self.config.GPU)

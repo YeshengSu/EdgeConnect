@@ -86,7 +86,7 @@ def load_config(mode=None, path=None):
 
     args = parser.parse_args()
 
-    cfg_path = args.path if not path else path
+    cfg_path = args.path
     config_path = os.path.join(cfg_path, 'config.yml')
 
     # create checkpoints path if does't exist
