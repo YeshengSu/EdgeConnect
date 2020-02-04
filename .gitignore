@@ -103,20 +103,15 @@ ENV/
 
 # custom
 .todo
+
 results
+samples
 datasets
+weights
+logs
+
 \.idea/
 
 *.pth
 
 *.dat
-
-checkpoints/samples/edge/
-
-checkpoints/config.yml
-
-scripts/flist.py
-
-checkpoints/samples/inpaint/
-
-checkpoints/samples/edge_inpaint/
