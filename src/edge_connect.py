@@ -48,7 +48,7 @@ class EdgeConnect():
         if config.DEBUG is not None and config.DEBUG != 0:
             self.debug = True
 
-        self.log_file = os.path.join(config.PATH, 'log_' + model_name + '.dat')
+        self.log_file = os.path.join(config.LOG_PATH, 'log_' + model_name + '.dat')
 
     def load(self):
         if self.config.MODEL == 1:

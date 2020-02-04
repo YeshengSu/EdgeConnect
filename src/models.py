@@ -14,8 +14,8 @@ class BaseModel(nn.Module):
         self.config = config
         self.iteration = 0
 
-        self.gen_weights_path = os.path.join(config.PATH, name + '_gen.pth')
-        self.dis_weights_path = os.path.join(config.PATH, name + '_dis.pth')
+        self.gen_weights_path = os.path.join(config.WEIGHT_PATH, name + '_gen.pth')
+        self.dis_weights_path = os.path.join(config.WEIGHT_PATH, name + '_dis.pth')
 
     def load(self):
         if os.path.exists(self.gen_weights_path):

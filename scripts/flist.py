@@ -4,12 +4,12 @@ import numpy as np
 ext = {'.JPG', '.JPEG', '.PNG', '.TIF', 'TIFF'}
 
 flist_dataset_paths = {
-    r"../datasets/places2_train.flist": [r"E:\DeepLearningData\EdgeConnect\CelebA\train",],
-    r"../datasets/places2_val.flist"  : [r"E:\DeepLearningData\EdgeConnect\CelebA\eval",],
-    r"../datasets/places2_test.flist" : [r"E:\DeepLearningData\EdgeConnect\CelebA\test",],
-    r"../datasets/masks_train.flist"  : [r"E:\DeepLearningData\EdgeConnect\mask\CustomMask3\train",],
-    r"../datasets/masks_val.flist"    : [r"E:\DeepLearningData\EdgeConnect\mask\CustomMask3\eval",],
-    r"../datasets/masks_test.flist"   : [r"E:\DeepLearningData\EdgeConnect\mask\CustomMask3\test",],
+    r"../checkpoints/datasets/places2_train.flist": [r"E:\DeepLearningData\EdgeConnect\CelebA\train",],
+    r"../checkpoints/datasets/places2_val.flist"  : [r"E:\DeepLearningData\EdgeConnect\CelebA\eval",],
+    r"../checkpoints/datasets/places2_test.flist" : [r"E:\DeepLearningData\EdgeConnect\CelebA\test",],
+    r"../checkpoints/datasets/masks_train.flist"  : [r"E:\DeepLearningData\EdgeConnect\mask\CustomMask3\train",],
+    r"../checkpoints/datasets/masks_val.flist"    : [r"E:\DeepLearningData\EdgeConnect\mask\CustomMask3\eval",],
+    r"../checkpoints/datasets/masks_test.flist"   : [r"E:\DeepLearningData\EdgeConnect\mask\CustomMask3\test",],
 }
 
 for flist_path, dataset_paths in flist_dataset_paths.items():

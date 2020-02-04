@@ -23,6 +23,7 @@ class Dataset(torch.utils.data.Dataset):
         self.mode = config.MODE
         self.augment = augment
         self.training = training
+        self.dataset_path = config.DATASET_PATH
         self.data = self.load_flist(flist)  # 最好为n^2 的不带alpha的RGB图片
         self.edge_data = self.load_flist(edge_flist)
         self.mask_data = self.load_flist(mask_flist)  # 必须位图 类型为 Pil的 ‘1’
@@ -175,16 +176,17 @@ class Dataset(torch.utils.data.Dataset):
 
         # flist: image file path, image directory path, text file flist path
         if isinstance(flist, str):
-            if os.path.isdir(flist):
-                flist = list(glob.glob(flist + '/*.jpg')) + list(glob.glob(flist + '/*.png'))
+            file_path = os.path.join(self.dataset_path, flist)
+            if os.path.isdir(file_path):
+                flist = list(glob.glob(file_path + '/*.jpg')) + list(glob.glob(file_path + '/*.png'))
                 flist.sort()
                 return flist
 
-            if os.path.isfile(flist):
+            if os.path.isfile(file_path):
                 try:
-                    return np.genfromtxt(flist, dtype=np.str, encoding='utf-8')
+                    return np.genfromtxt(file_path, dtype=np.str, encoding='utf-8')
                 except:
-                    return [flist]
+                    return [file_path]
 
         return []
 
