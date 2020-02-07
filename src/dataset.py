@@ -142,7 +142,7 @@ class Dataset(torch.utils.data.Dataset):
         # random block
         if mask_type == 1:
             # return create_mask(imgw, imgh, imgw // 2, imgh // 2)
-            return mask_generator.generate_random_mask(np.random.rand(2, 8), imgh, imgw)
+            return mask_generator.generate_random_mask(np.random.rand(np.random.randint(2, 5), 8), imgh, imgw)
 
         # half
         if mask_type == 2:
