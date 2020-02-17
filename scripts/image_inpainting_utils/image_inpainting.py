@@ -1,5 +1,5 @@
 import cv2
-from PyQt5.QtCore import Qt, QThread
+from PyQt5.QtCore import Qt, QThread, QStringListModel
 import glob
 import os
 import random
@@ -11,7 +11,8 @@ import torchvision.transforms.functional as F
 from PIL import Image
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QWidget, QLabel, QPushButton, QGridLayout, QVBoxLayout
+from PyQt5.QtWidgets import QWidget, QLabel, QPushButton, QGridLayout, QVBoxLayout, QListView, QAbstractItemView, \
+    QHBoxLayout
 from imageio import imread
 from skimage.color import rgb2gray, gray2rgb
 from skimage.feature import canny
@@ -194,7 +195,7 @@ class ImageInpainting(QWidget):
     PREVIEW_RESULT_WIDTH = 450
 
     INFO_READY = 'Info : READY'
-    INFO_PROCESS = 'Info : Processing......'
+    INFO_PROCESS = 'Info : PROCESSING......'
     INFO_FINSH = 'Info : ACCOMPLISHMENT !'
 
     def __init__(self, parent=None):
@@ -205,6 +206,10 @@ class ImageInpainting(QWidget):
         self.image_clip_mask_data = None
         self.image_edge_data = None
         self.image_result_data = None
+        self.item_name_to_clip_image_info = {}  # (clip image, clip_pos_size, left_up_pos, size)
+        self.item_name_to_mask_image_info = {}  # (mask image)
+        self.item_name_to_result_image_info = {}  # (edge image, result image)
+        self.current_item_name = 'image 1'
         self.edge_model = None
         self.inpaint_model = None
         self.config = None
@@ -236,6 +241,15 @@ class ImageInpainting(QWidget):
         self.label_image_edge = QLabel('image edge')
         self.label_image_result = QLabel('image mask')
 
+        # listview
+        self.label_listview = QLabel('Select Image')
+        self.model_image_clip = QStringListModel(self)
+        self.model_image_clip.setStringList(self.item_name_to_clip_image_info.keys())
+        self.listview_image_clip = QListView(self)
+        self.listview_image_clip.setModel(self.model_image_clip)
+        self.listview_image_clip.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.listview_image_clip.doubleClicked.connect(lambda: self.on_clicked_listview_item(self.listview_image_clip))
+
         self.vbox_layout1 = QVBoxLayout()
         self.vbox_layout1.addWidget(self.label_clip, alignment=Qt.AlignBottom)
         self.vbox_layout1.addWidget(self.label_image_clip)
@@ -252,23 +266,44 @@ class ImageInpainting(QWidget):
         self.vbox_layout3.addWidget(self.label_image_result)
         self.vbox_layout3.addWidget(self.label_info)
 
+        self.hbox_layout1 = QHBoxLayout()
+        self.hbox_layout1.addLayout(self.vbox_layout1)
+        self.hbox_layout1.addLayout(self.vbox_layout2)
+        self.vbox_layout4 = QVBoxLayout()
+        self.vbox_layout4.addLayout(self.hbox_layout1)
+        self.vbox_layout4.addWidget(self.label_listview)
+        self.vbox_layout4.addWidget(self.listview_image_clip)
+
         self.grid_layout = QGridLayout()
         self.grid_layout.addWidget(self.btn_start, 0, 0, 1, 3)
         self.grid_layout.addWidget(self.btn_show, 0, 4, 1, 3)
-        self.grid_layout.addLayout(self.vbox_layout1, 1, 0, 8, 3)
-        self.grid_layout.addLayout(self.vbox_layout2, 1, 3, 8, 3)
+        self.grid_layout.addLayout(self.vbox_layout4, 1, 0, 9, 6)
         self.grid_layout.addLayout(self.vbox_layout3, 1, 6, 9, 9, Qt.AlignCenter)
         self.setLayout(self.grid_layout)
 
-    def set_image(self, image_clip_data, image_mask_data):
+    def set_image(self, item_name_to_clip_image_info, item_name_to_mask_image_info):
+        self.item_name_to_clip_image_info = item_name_to_clip_image_info
+        self.item_name_to_mask_image_info = item_name_to_mask_image_info
+
+        self.model_image_clip.setStringList(self.item_name_to_clip_image_info.keys())
+
+        for item_name, image_info in self.item_name_to_clip_image_info.items():
+            image_clip_data = image_info[0]
+            self.item_name_to_result_image_info[item_name] = \
+                (np.zeros(image_clip_data.shape, np.uint8), np.copy(image_clip_data))
+
+        self.set_current_draw('image 1')
+
+    def set_current_draw(self, item_name):
         from image_inpainting_demo import set_label_image
+        self.current_item_name = item_name
 
         # clip image
-        self.image_clip_data = image_clip_data
+        self.image_clip_data = self.item_name_to_clip_image_info[self.current_item_name][0]
         set_label_image(self.label_image_clip, self.PREVIEW_CLIP_WIDTH, self.image_clip_data)
 
         # mask image
-        self.image_mask_data = image_mask_data
+        self.image_mask_data = self.item_name_to_mask_image_info[self.current_item_name][0]
         set_label_image(self.label_image_mask, self.PREVIEW_MASK_WIDTH, self.image_mask_data)
 
         # clip mask image
@@ -278,16 +313,15 @@ class ImageInpainting(QWidget):
         set_label_image(self.label_image_clip_mask, self.PREVIEW_CLIP_MASK_WIDTH, self.image_clip_mask_data)
 
         # edge image
-        self.image_edge_data = np.zeros(self.image_clip_mask_data.shape, np.uint8)
+        self.image_edge_data = self.item_name_to_result_image_info[item_name][0]
         set_label_image(self.label_image_edge, self.PREVIEW_EDGE_WIDTH, self.image_edge_data)
 
         # result image
-        self.image_result_data = np.copy(self.image_clip_mask_data)
+        self.image_result_data = self.item_name_to_result_image_info[item_name][1]
         set_label_image(self.label_image_result, self.PREVIEW_RESULT_WIDTH, self.image_result_data)
 
         self.parent.setTabEnabled(3, True)
         self.label_info.setText(self.INFO_READY)
-        return
 
     def on_clicked_start(self):
         print('on_click_start')
@@ -301,13 +335,20 @@ class ImageInpainting(QWidget):
 
     def on_clicked_show(self):
         row_image_data = np.copy(self.parent.file_explorer.image_selected_data)
-        paste_pos_size = self.parent.clip_area.clip_pos_size
-        x, y, width, height = paste_pos_size
-
         row_img = Image.fromarray(row_image_data)
-        result_img = Image.fromarray(self.image_result_data)
-        row_img.paste(result_img, (x, y, x + width, y + height))
+        for item_name in self.item_name_to_clip_image_info.keys():
+            image_result_data = self.item_name_to_result_image_info[item_name][1]
+            clip_pos_size = self.item_name_to_clip_image_info[item_name][1]
+            paste_pos_size = clip_pos_size
+            x, y, width, height = paste_pos_size
+            result_img = Image.fromarray(image_result_data)
+            row_img.paste(result_img, (x, y, x + width, y + height))
+
         row_img.show('inpainted image')
+
+    def on_clicked_listview_item(self, listview):
+        data = listview.currentIndex().data()
+        self.set_current_draw(data)
 
     def image_inpainting(self):
         from shutil import copyfile
@@ -354,7 +395,6 @@ class ImageInpainting(QWidget):
         random.seed(self.config.SEED)
 
         if not self.edge_model and not self.inpaint_model:
-            model_name = 'edge_inpaint'
             self.edge_model = EdgeModel(self.config).to(self.config.DEVICE)
             self.inpaint_model = InpaintingModel(self.config).to(self.config.DEVICE)
             # load model
@@ -365,19 +405,25 @@ class ImageInpainting(QWidget):
             self.inpaint_model.eval()
 
         # load dataset
-        test_dataset = ImageDataset(self.config, [self.image_clip_data], [], [self.image_mask_data],
+        image_clip_data_list = []
+        image_mask_data_list = []
+        item_name_list = []
+        for item_name in self.item_name_to_clip_image_info.keys():
+            item_name_list.append(item_name)
+            image_clip_data_list.append(self.item_name_to_clip_image_info[item_name][0])
+            image_mask_data_list.append(self.item_name_to_mask_image_info[item_name][0])
+        test_dataset = ImageDataset(self.config, image_clip_data_list, [], image_mask_data_list,
                                     augment=False, training=False)
 
         # start testing
-        print('\nstart testing...\n')
-
+        print('start testing...')
 
         test_loader = DataLoader(dataset=test_dataset, batch_size=1)
 
         def to_cuda(*args):
             return (item.to(self.config.DEVICE) if hasattr(item, 'to') else item for item in args)
 
-        for items in test_loader:
+        for index, items in enumerate(test_loader):
             ori_shapes, images, images_gray, edges, masks = to_cuda(*items)
             edges = self.edge_model(images_gray, edges, masks).detach()
             outputs = self.inpaint_model(images, edges, masks)
@@ -385,16 +431,17 @@ class ImageInpainting(QWidget):
 
             # output edge img
             image_edge_data = self._get_image_data_from_tensor(edges, ori_shapes)
-            self.image_edge_data = image_edge_data
-            set_label_image(self.label_image_edge, self.PREVIEW_EDGE_WIDTH, self.image_edge_data)
 
             # output result img
             image_result_data = self._get_image_data_from_tensor(outputs_merged, ori_shapes)
-            self.image_result_data = image_result_data
-            set_label_image(self.label_image_result, self.PREVIEW_RESULT_WIDTH, self.image_result_data)
 
-            break
-        print('\nEnd test....')
+            # save to image info
+            item_name = item_name_list[index]
+            self.item_name_to_result_image_info[item_name] = (image_edge_data, image_result_data)
+
+        print('End test....')
+
+        self.set_current_draw(self.current_item_name)
 
         self.btn_start.setEnabled(True)
         self.btn_show.setEnabled(True)

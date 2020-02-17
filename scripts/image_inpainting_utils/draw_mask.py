@@ -1,9 +1,10 @@
 import math
 import numpy as np
 from PIL import Image
-from PyQt5.QtCore import Qt, QRect
+from PyQt5.QtCore import Qt, QRect, QStringListModel
 from PyQt5.QtGui import QFont, QPalette, QColor, QImage, QPixmap, QPainter, QPen
-from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QPushButton, QColorDialog, QSpinBox, QGridLayout
+from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QPushButton, QColorDialog, QSpinBox, QGridLayout, QListView, \
+    QAbstractItemView
 
 
 class DrawLabel(QLabel):
@@ -41,6 +42,9 @@ class DrawMask(QWidget):
         self.show_image_size = (0, 0)
         self.image_mask_data = None
         self.image_draw_data = None
+        self.item_name_to_clip_image_info = {}  # (clip image, clip_pos_size, left_up_pos, size)
+        self.item_name_to_mask_image_info = {}  # (mask image)
+        self.current_item_name = 'image 1'
         self.color_pen = QColor(50, 200, 50)
         self.brush_size = 6
 
@@ -74,6 +78,15 @@ class DrawMask(QWidget):
         self.image_mask_preview = QLabel('mask preview')
         self.image_mask_preview.setAlignment(Qt.AlignHCenter)
 
+        # listview
+        self.label_listview = QLabel('Select Image')
+        self.model_image_clip = QStringListModel(self)
+        self.model_image_clip.setStringList(self.item_name_to_clip_image_info.keys())
+        self.listview_image_clip = QListView(self)
+        self.listview_image_clip.setModel(self.model_image_clip)
+        self.listview_image_clip.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.listview_image_clip.doubleClicked.connect(lambda: self.on_clicked_listview_item(self.listview_image_clip))
+
         self.grid_layout = QGridLayout()
         self.grid_layout.addWidget(self.label_brush_size,   0, 0, 1, 1)
         self.grid_layout.addWidget(self.spin_brush_size, 0, 1, 1, 1)
@@ -82,24 +95,38 @@ class DrawMask(QWidget):
         self.grid_layout.addWidget(self.btn_finish, 0, 8, 1, 2)
         self.grid_layout.addWidget(self.image_draw_mask, 1, 0, 5, 5)
         self.grid_layout.addWidget(self.image_mask_preview, 1, 5, 5, 5, Qt.AlignTop)
+        self.grid_layout.addWidget(self.label_listview, 6, 5, 1, 2)
+        self.grid_layout.addWidget(self.listview_image_clip, 7, 5, 1, 4)
         self.setLayout(self.grid_layout)
 
-    def set_image(self, image_clip_data):
-        from image_inpainting_demo import set_label_image
+    def set_image(self, item_name_to_clip_image_info):
+        self.item_name_to_clip_image_info = item_name_to_clip_image_info
+        self.model_image_clip.setStringList(self.item_name_to_clip_image_info.keys())
 
-        self.image_clip_data = image_clip_data
-        # show preview
-        self.show_image_size = set_label_image(self.image_draw_mask, self.PREVIEW_CLIP_WIDTH, self.image_clip_data)
-
-        # draw image
-        self.image_draw_data = np.copy(self.image_clip_data)
-
-        # create mask
-        self.image_mask_data = np.copy(self.image_clip_data)
-        self.image_mask_data[:, :] = 0
-        set_label_image(self.image_mask_preview, self.PREVIEW_MASK_WIDTH, self.image_mask_data)
+        for item_name, clip_image_info in self.item_name_to_clip_image_info.items():
+            self.item_name_to_mask_image_info[item_name] = (np.copy(clip_image_info[0]),)
+            self.item_name_to_mask_image_info[item_name][0][:, :] = 0
 
         self.parent.setTabEnabled(2, True)
+
+        self.set_current_draw('image 1')
+
+    def set_current_draw(self, item_name):
+        from image_inpainting_demo import set_label_image
+        self.current_item_name = item_name
+
+        # show preview
+        self.image_clip_data = self.item_name_to_clip_image_info[self.current_item_name][0]
+
+        # create mask
+        self.image_mask_data = self.item_name_to_mask_image_info[self.current_item_name][0]
+        set_label_image(self.image_mask_preview, self.PREVIEW_MASK_WIDTH, self.image_mask_data)
+
+        # draw image
+        color = (self.color_pen.red(), self.color_pen.green(), self.color_pen.blue())
+        self.image_draw_data = np.copy((self.image_mask_data / 255 * color) + ((1 - self.image_mask_data / 255) * self.image_clip_data))
+        self.image_draw_data = np.array(self.image_draw_data, np.uint8)
+        self.show_image_size = set_label_image(self.image_draw_mask, self.PREVIEW_CLIP_WIDTH, self.image_draw_data)
 
     def draw_mask(self, pos):
         from image_inpainting_demo import set_label_image
@@ -118,8 +145,6 @@ class DrawMask(QWidget):
         self.image_mask_data[y0:y1 + 1, x0:x1 + 1] = 255
         set_label_image(self.image_mask_preview, self.PREVIEW_MASK_WIDTH, self.image_mask_data)
         self.refresh_mask_image((x0,y0,x1,y1))
-
-        # print('draw _x:{}, _y:{}'.format(actual_x, actual_y))
 
     def refresh_mask_image(self, x0y0_x1y1=None):
         from image_inpainting_demo import set_label_image
@@ -154,4 +179,8 @@ class DrawMask(QWidget):
         self.refresh_mask_image()
 
     def on_clicked_finish(self):
-        self.parent.image_inpainting.set_image(self.image_clip_data, self.image_mask_data)
+        self.parent.image_inpainting.set_image(self.item_name_to_clip_image_info, self.item_name_to_mask_image_info)
+
+    def on_clicked_listview_item(self, listview):
+        data = listview.currentIndex().data()
+        self.set_current_draw(data)
